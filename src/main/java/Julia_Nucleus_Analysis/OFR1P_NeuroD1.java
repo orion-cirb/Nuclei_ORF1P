@@ -208,13 +208,13 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 // Dots detections
                 // All dots population
                 Objects3DPopulation allDotsPop = new Objects3DPopulation();
-                if (channels.size() > 2)
+                if (tools.dotsDetect)
                     allDotsPop = tools.find_dots(imgZCropOFR1P, 2, 1, "Triangle");
 
                 // Save image objects
                 tools.saveImageObjects(nucPop, outerRingPop, null, imgZCropOFR1P, outDirResults+rootName+"_OuterRingObjects.tif", 40);
                 tools.saveImageObjects(innerRingPop, innerNucPop, null, imgZCropOFR1P, outDirResults+rootName+"_innerRingObjects.tif", 40);
-                if (channels.size() > 2)
+                if (tools.dotsDetect)
                     tools.saveImageObjects(nucPop, allDotsPop, cellPop, imgZCropOFR1P, outDirResults+rootName+"_dotsObjects.tif", 40);
                 
                 // tags nucleus with parameters

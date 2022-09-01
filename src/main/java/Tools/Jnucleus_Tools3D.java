@@ -67,6 +67,7 @@ public class Jnucleus_Tools3D {
     public float outerNucDil = 2;
     public int zMax = 1;
     public boolean zCrop = false;
+    public boolean dotsDetect = true;
     public Calibration cal;
     
     // StarDist
@@ -197,6 +198,7 @@ public class Jnucleus_Tools3D {
             gd.addNumericField("Max dots vol. :", maxDotVol);
         }
         gd.addCheckbox("  Do zCrop", zCrop);
+        gd.addCheckbox("  Do dots detection", dotsDetect);
         gd.showDialog();
         for (int i = 0; i < index; i++)
             ch.add(i, gd.getNextChoice());
@@ -223,6 +225,7 @@ public class Jnucleus_Tools3D {
             maxDotVol = (float)gd.getNextNumber();
         }
         zCrop = gd.getNextBoolean();
+        dotsDetect = gd.getNextBoolean();
         if(gd.wasCanceled())
             ch = null;
         return(ch);
