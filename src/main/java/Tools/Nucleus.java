@@ -23,6 +23,8 @@ public class Nucleus {
     private double nucDotsVol;
     // Nucleus dots intensity
     private double nucDotsInt;
+    // nucleus circularity
+    private double nucCir;
     
     // Inner nucleus volume
     private double innerNucVol;
@@ -70,11 +72,12 @@ public class Nucleus {
 
   
 	
-	public Nucleus(int index, double nucVol, double nucInt, int nucDots, double nucDotsVol, double nucDotsInt, double innerNucVol, double innerNucInt, int innerNucDots, double innerNucDotsVol,
+	public Nucleus(int index, double nucVol, double nucCir, double nucInt, int nucDots, double nucDotsVol, double nucDotsInt, double innerNucVol, double innerNucInt, int innerNucDots, double innerNucDotsVol,
                     double innerNucDotsInt, double innerRingVol, double innerRingInt, int innerRingDots, double innerRingDotsVol, double innerRingDotsInt, double outerRingVol, double outerRingInt,
                     int outerRingDots, double outerRingDotsVol, double outerRingDotsInt, double cytoVol, double cytoInt, int cytoDots, double cytoDotsVol, double cytoDotsInt) {
             this.index = index;
             this.nucVol = nucVol;
+            this.nucCir =nucCir; 
             this.nucInt = nucInt;
             this.nucDots = nucDots;
             this.nucDotsVol = nucDotsVol;
@@ -107,6 +110,10 @@ public class Nucleus {
         
         public void setNucVol(double nucVol) {
             this.nucVol = nucVol;
+	}
+        
+        public void setNucCir(double nucCir) {
+            this.nucCir = nucCir;
 	}
         
         public void setNucInt(double nucInt) {
@@ -213,7 +220,11 @@ public class Nucleus {
             return nucVol;
         }
                 
-        public double getNucInt() {
+        public double getNucCir() {
+            return nucCir;
+        }
+        
+         public double getNucInt() {
             return nucInt;
 	}
         

@@ -801,6 +801,7 @@ public class Jnucleus_Tools3D {
             // nucleus
             Object3D nucObj = nucPop.getObject(i);
             double nucVol = nucObj.getVolumeUnit();
+            double nucCir = nucObj.getSphericity();
             double nucInt = nucObj.getIntegratedDensity(imh);
             System.out.println("Finding nucleus "+i+"/"+nucs+" dots ...");
             Objects3DPopulation nucDotsPop = findDotsPop(img, imgDots, nucObj);
@@ -866,7 +867,7 @@ public class Jnucleus_Tools3D {
                 cytoDotsInt = findDotsIntensity(cytoDotsPop, imh);
             }
             // add cell parameters
-            Nucleus nucleus = new Nucleus(i, nucVol, nucInt, nucDots, nucDotsVol, nucDotsInt, innerNucVol, innerNucInt, innerNucDots, innerNucDotsVol, innerNucDotsInt,
+            Nucleus nucleus = new Nucleus(i, nucVol, nucCir, nucInt, nucDots, nucDotsVol, nucDotsInt, innerNucVol, innerNucInt, innerNucDots, innerNucDotsVol, innerNucDotsInt,
             innerRingVol, innerRingInt, innerRingDots, innerRingDotsVol, innerRingDotsInt, outerVol, outerInt, outerDots, outerDotsVol, outerDotsInt,
                     cytoVol, cytoInt, cytoDots, cytoDotsVol, cytoDotsInt);
             nuclei.add(nucleus);

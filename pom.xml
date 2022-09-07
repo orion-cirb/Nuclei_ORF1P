@@ -32,7 +32,7 @@
             <connection>scm:git:git://github.com/imagej/Nucleus_Quantifs.jar</connection>
             <developerConnection>scm:git:git@github.com:imagej/Nucleus_Quantifs.jar</developerConnection>
             <tag>HEAD</tag>
-            <url>https://github.com/pmailly/Nucleus_Quantifs.jar</url>
+            <url>https://github.com/orion-cirb/Nucleus_Quantifs.jar</url>
 	</scm>
         
 	<properties>
