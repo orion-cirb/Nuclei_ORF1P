@@ -28,6 +28,11 @@ import loci.plugins.in.ImporterOptions;
 import loci.plugins.util.ImageProcessorReader;
 import mcib3d.geom.Object3D;
 import mcib3d.geom.Objects3DPopulation;
+import mcib3d.geom2.Object3DInt;
+import mcib3d.geom2.Objects3DIntPopulation;
+import mcib3d.geom2.measurements.Measure2Colocalisation;
+import mcib3d.geom2.measurements.MeasureIntensity;
+import mcib3d.geom2.measurements.MeasureVolume;
 import mcib3d.image3d.ImageHandler;
 import org.apache.commons.io.FilenameUtils;
 
@@ -97,7 +102,7 @@ public class YH2AX implements PlugIn {
             channelsName.add("Nucleus");
             channelsName.add("YH2AX");
             if (channels.size() > 1) {
-                chs = tools.dialog(channels, channelsName, false);
+                chs = tools.dialog(channels, channelsName);
                 if ( chs == null) {
                     IJ.showStatus("Plugin cancelled");
                     return;
@@ -131,11 +136,7 @@ public class YH2AX implements PlugIn {
                 double sectionVol = (imgNucleus.getWidth() * cal.pixelWidth * imgNucleus.getHeight() * cal.pixelHeight * imgNucleus.getNSlices() * cal.pixelDepth)/1e9;
                 
                 // Find nucleus
-                Objects3DPopulation nucPop = new Objects3DPopulation();
-                if (tools.nucleusDetector.equals("StarDist"))
-                    nucPop = tools.stardistNucleiPop(imgNucleus);
-                else
-                    nucPop = tools.findNucleus(imgNucleus, 18, 20, 2, "Triangle");
+                Objects3DIntPopulation nucPop =  tools.stardistNucleiPop(imgNucleus);
                 
                 // open YH2AX Channel
                 System.out.println("Opening YH2AX channel " + channels.get(1)+ " ...");
@@ -147,30 +148,29 @@ public class YH2AX implements PlugIn {
                 ArrayList<Double> nucOFR1P_intensity = tools.readIntensity(imgYH2AX, nucPop);
                 
                 // Find YH2AX dots
-                Objects3DPopulation dotsPop = tools.find_dots(imgYH2AX, 2, 1, "Triangle");
+                Objects3DIntPopulation dotsPop = tools.find_dots(imgYH2AX, 2, 1, "Triangle");
                 System.out.println(dotsPop.getNbObjects()+" dots found");
                 
                 // Save image objects
-                tools.saveImageObjects(nucPop, dotsPop, null, imgYH2AX, outDirResults+rootName+"_objects.tif", 40);
+                tools.saveImageObjects(null, dotsPop, nucPop, imgYH2AX, outDirResults+rootName+"_objects.tif", 3, 40);
                 
                 // write parameters
-                for (int i = 0; i < nucPop.getNbObjects(); i++) {
-                    Object3D nucObj = nucPop.getObject(i);
-                    double nucObjVol = nucObj.getVolumeUnit();
+                for (Object3DInt nucObj : nucPop.getObjects3DInt()) {
+                    double nucObjVol = new MeasureVolume(nucObj).getVolumeUnit();
                     int dotsNuc = 0;
                     double dotsNucInt = 0;
                     double dotsNucVol = 0;
-                    double nucInt = nucObj.getIntegratedDensity(imhYH2AX);
-                    for (int n = 0; n < dotsPop.getNbObjects(); n++) {
-                        Object3D dotObj = dotsPop.getObject(n);
+                    double nucInt = new MeasureIntensity(nucObj, imhYH2AX).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
+                    for (Object3DInt dotObj : dotsPop.getObjects3DInt()) {
                         // find dots inside nucleus
-                        if (dotObj.hasOneVoxelColoc(nucObj)) {
+                        Measure2Colocalisation coloc = new Measure2Colocalisation(dotObj, nucObj);
+                        if (coloc.getValue(Measure2Colocalisation.COLOC_PC) >= 80) {
                             dotsNuc++;
-                            dotsNucVol += dotObj.getVolumeUnit();
-                           dotsNucInt += dotObj.getIntegratedDensity(imhYH2AX);
+                            dotsNucVol += new MeasureVolume(dotObj).getVolumeUnit();
+                           dotsNucInt += new MeasureIntensity(dotObj, imhYH2AX).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
                         }
                     }
-                    nucleus_Analyze.write(rootName+"\t"+i+"\t"+nucObjVol+"\t"+nucInt+"\t"+dotsNuc+"\t"+dotsNucInt+"\t"+dotsNucVol+"\n");
+                    nucleus_Analyze.write(rootName+"\t"+(int)nucObj.getLabel()+"\t"+nucObjVol+"\t"+nucInt+"\t"+dotsNuc+"\t"+dotsNucInt+"\t"+dotsNucVol+"\n");
                 }
                 
                 tools.closeImages(imgYH2AX);

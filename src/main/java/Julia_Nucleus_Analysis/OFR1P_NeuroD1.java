@@ -21,14 +21,13 @@ import loci.formats.meta.IMetadata;
 import loci.formats.services.OMEXMLService;
 import loci.plugins.BF;
 import loci.plugins.util.ImageProcessorReader;
-import ij.measure.Calibration;
 import ij.plugin.Duplicator;
 import ij.plugin.PlugIn;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 import loci.plugins.in.ImporterOptions;
-import mcib3d.geom.Objects3DPopulation;
+import mcib3d.geom2.Objects3DIntPopulation;
 import org.apache.commons.io.FilenameUtils;
 
 
@@ -51,7 +50,6 @@ public class OFR1P_NeuroD1 implements PlugIn {
     public  String outDirResults = "";
     public  String rootName = "";
     public BufferedWriter nucleus_Analyze;
-    public BufferedWriter nucleusGlobal_Analyze;
     
     @Override
     public void run(String arg) {
@@ -95,7 +93,7 @@ public class OFR1P_NeuroD1 implements PlugIn {
 
 
             // write headers
-            String header= "Image Name\t# Nucleus\tNucleus Volume (µm3)\tNucleus Sphericity\tNucleus intensity\tNucleus corrected intensity\tNucleus dots number\tNucleus dots volume (µm3)\tNucleus dots intensity\t"
+            String header= "Image Name\t# Nucleus\tNucleus Volume (µm3)\tNucleus Sphericity\tNucleus rad1 elipse\tNucleus rad2 elipse\tNucleus intensity\tNucleus corrected intensity\tNucleus dots number\tNucleus dots volume (µm3)\tNucleus dots intensity\t"
                     + "Nucleus inner volume (µm3)" + "\t" + "Nucleus inner intensity\tNucleus inner corrected intensity\tNucleus inner dots number\tNucleus inner dots volume (µm3)\tNucleus inner dots intensity\t"
                     + "Nucleus inner ring volume (µm3)" + "\t" + "Nucleus inner ring intensity\tNucleus inner ring corrected intensity\tNucleus inner ring dots number\tNucleus inner ring dots volume (µm3)\tNucleus inner ring dots intensity\t"
                     + "Nucleus outer ring volume (µm3)" + "\t" + "Nucleus outer ring intensity\tNucleus outer ring corrected intensity\tNucleus outer ring dots number\tNucleus outer ring dots volume (µm3)\tNucleus outer ring dots intensity\t"
@@ -104,20 +102,14 @@ public class OFR1P_NeuroD1 implements PlugIn {
             nucleus_Analyze = new BufferedWriter(fwNucleus);
             nucleus_Analyze.write(header);
             nucleus_Analyze.flush();
-            header= "Image Name\tNucleus number\tSection volume (µm3)\tBackground Intensity\tStd BG\tCorrected sum intensity of nucleus masked\tCorrected of sum intensity of cells processes\n";
-            FileWriter fwNucleusGlobal = new FileWriter(outDirResults + "nucleus_GlobalResults.xls", false);
-            nucleusGlobal_Analyze = new BufferedWriter(fwNucleusGlobal);
-            nucleusGlobal_Analyze.write(header);
-            nucleusGlobal_Analyze.flush();
             
             // Channels dialog
             List<String> chs = new ArrayList();
             List<String> channelsName = new ArrayList();
             channelsName.add("Nucleus");
             channelsName.add("OFR1P");
-            channelsName.add("NeuroD1");
             if (channels.size() > 1) {
-                chs = tools.dialog(channels, channelsName, true);
+                chs = tools.dialog(channels, channelsName);
                 if ( chs == null) {
                     IJ.showStatus("Plugin cancelled");
                     return;
@@ -146,97 +138,78 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 System.out.println("Opening nucleus channel " + channels.get(0) +" ...");
                 int channel = channels.indexOf(chs.get(0));
                 ImagePlus imgNucleus = BF.openImagePlus(options)[channel];
-               
-                // Find Z where nucleus stack intensity max
-                ImagePlus imgZCropNuc = (tools.zCrop) ? tools.cropZmax(imgNucleus) : new Duplicator().run(imgNucleus);
-                tools.closeImages(imgNucleus);
                 
                 //section volume in µm^3
                 double volPix = tools.cal.pixelWidth*tools.cal.pixelHeight*tools.cal.pixelDepth;
-                double sectionVol = (imgZCropNuc.getWidth() * imgZCropNuc.getHeight() * imgZCropNuc.getNSlices() * volPix);
+                double sectionVol = (imgNucleus.getWidth() * imgNucleus.getHeight() * imgNucleus.getNSlices() * volPix);
                 
                 // Find nucleus
-                Objects3DPopulation nucPop = new Objects3DPopulation();
-                if (tools.nucleusDetector.equals("StarDist"))
-                    nucPop = tools.stardistNucleiPop(imgZCropNuc);
-                else
-                    nucPop = tools.findNucleus(imgZCropNuc, 18, 20, 2, "Triangle");
+                Objects3DIntPopulation nucPop =  tools.stardistNucleiPop(imgNucleus);
                 System.out.println(nucPop.getNbObjects()+" nucleus founds");
                 
                 // Find inner/outer ring nucleus
                 // outer
                 System.out.println("Finding outer ring ....");
-                Objects3DPopulation outerRingPop = tools.createDonutPop(nucPop, imgZCropNuc, tools.outerNucDil, true);
+                Objects3DIntPopulation outerRingPop = tools.createDonutPop(nucPop, imgNucleus, tools.outerNucDil, true);
                 // inner
                 System.out.println("Finding inner ring ....");
-                Objects3DPopulation innerRingPop = tools.createDonutPop(nucPop, imgZCropNuc, tools.innerNucDil, false);
+                Objects3DIntPopulation innerRingPop = tools.createDonutPop(nucPop, imgNucleus, tools.innerNucDil, false);
                 // inner nucleus
                 System.out.println("Finding inner nucleus ....");
-                Objects3DPopulation innerNucPop = tools.getInnerNucleus(nucPop, imgZCropNuc, tools.innerNucDil, false);
+                Objects3DIntPopulation innerNucPop = tools.getInnerNucleus(nucPop, imgNucleus);
                 
-                tools.closeImages(imgZCropNuc);
-                   
+                // Save image objects
+                tools.saveImageObjects(null, outerRingPop, nucPop, imgNucleus, outDirResults+rootName+"_OuterRingObjects.tif", 0, 40);
+                tools.closeImages(imgNucleus);
+                
                 // open OFRP1 Channel
                 System.out.println("Opening OFR1P channel " + channels.get(1)+ " ...");
                 channel = channels.indexOf(chs.get(1));
                 ImagePlus imgOFR1P = BF.openImagePlus(options)[channel];
                 
-                // Take same stack as nucleus
-                ImagePlus imgZCropOFR1P = new Duplicator().run(imgOFR1P, tools.zMax, imgOFR1P.getNSlices());
-                tools.closeImages(imgOFR1P);
-                
                 // Find background
-                double[] bgOFR1P = tools.find_background(imgZCropOFR1P);
+                double[] bgOFR1P = tools.find_background(imgOFR1P);
                 
-                // Find cell cytoplasm
-                Objects3DPopulation cellPop = tools.findCells(imgZCropOFR1P, nucPop);
+                // Find cells cytoplasm
+                Objects3DIntPopulation cellPop = new Objects3DIntPopulation();
+                if(tools.cellDetector.equals("CellPose"))
+                    cellPop = tools.cellPoseCellsPop(imgOFR1P, nucPop);
+                else
+                    cellPop = tools.findCells(imgOFR1P, nucPop);
+                System.out.println(cellPop.getNbObjects()+" cells found with nucleus");
                 
-                // mask OFR1P with nucleus object
-                ImagePlus imgOFR1P_NucleusMask = tools.maskImage(imgZCropOFR1P, nucPop, outDirResults, rootName+"_nucleusMasked.tif");
-                
-                 // read all intensity in OFR1P nucleus masked channel
-                double sumNucMaskedIntensity = tools.readSumIntensity(imgOFR1P_NucleusMask, 0, null);
-                
-                // mask OFR1P with nucleus and cell object
-                ImagePlus imgOFR1P_CellMask = tools.maskImage(imgOFR1P_NucleusMask, cellPop, outDirResults, rootName+"_CellsMasked.tif");
-                
-                tools.closeImages(imgOFR1P_NucleusMask);
-                // read all intensity in OFR1P nucleus cells masked channel
-                double sumCellMaskedIntensity = tools.readSumIntensity(imgOFR1P_CellMask, bgOFR1P[0]+bgOFR1P[1], outDirResults+rootName+"_CellProcesses.tif");
-                tools.closeImages(imgOFR1P_CellMask);
-                
+                // Save cells cytoplasm
+                tools.saveImageObjects(null, cellPop, nucPop, imgOFR1P, outDirResults+rootName+"_CellsCytoplasmObjects.tif", 2, 40);
+
                 // Dots detections
                 // All dots population
-                Objects3DPopulation allDotsPop = new Objects3DPopulation();
+                Objects3DIntPopulation allDotsPop = new Objects3DIntPopulation();
                 if (tools.dotsDetect)
-                    allDotsPop = tools.find_dots(imgZCropOFR1P, 2, 1, "Triangle");
+                    allDotsPop = tools.find_dots(imgOFR1P, 2, 1, "Triangle");
+                System.out.println(allDotsPop.getNbObjects()+" dots found");
 
                 // Save image objects
-                tools.saveImageObjects(nucPop, outerRingPop, null, imgZCropOFR1P, outDirResults+rootName+"_OuterRingObjects.tif", 40);
-                tools.saveImageObjects(innerRingPop, innerNucPop, null, imgZCropOFR1P, outDirResults+rootName+"_innerRingObjects.tif", 40);
+                tools.saveImageObjects(null, outerRingPop, nucPop, imgOFR1P, outDirResults+rootName+"_OuterRingObjects.tif", 0, 40);
+                tools.saveImageObjects(innerNucPop, innerRingPop, null, imgOFR1P, outDirResults+rootName+"_innerRingObjects.tif", 0, 40);
                 if (tools.dotsDetect)
-                    tools.saveImageObjects(nucPop, allDotsPop, cellPop, imgZCropOFR1P, outDirResults+rootName+"_dotsObjects.tif", 40);
+                    tools.saveImageObjects(allDotsPop, cellPop, nucPop, imgOFR1P, outDirResults+rootName+"_dotsObjects.tif", 3, 40);
                 
                 // tags nucleus with parameters
-                ArrayList<Nucleus> nucleus = tools.tagsNuclei(imgZCropOFR1P, nucPop, innerNucPop, innerRingPop, outerRingPop, cellPop, allDotsPop);
+                ArrayList<Nucleus> nucleus = tools.tagsNuclei(imgOFR1P, nucPop, innerNucPop, innerRingPop, outerRingPop, cellPop, allDotsPop);
                              
                 // Write results
                 for (Nucleus nuc : nucleus) {
-                    nucleus_Analyze.write(rootName+"\t"+nuc.getIndex()+"\t"+nuc.getNucVol()+"\t"+nuc.getNucCir()+"\t"+nuc.getNucInt()+"\t"+(nuc.getNucInt() - bgOFR1P[0] * (nuc.getNucVol()/volPix)) +"\t"+nuc.getNucDots()+"\t"+nuc.getNucDotsVol()+"\t"+nuc.getNucDotsInt()+
+                    nucleus_Analyze.write(rootName+"\t"+nuc.getIndex()+"\t"+nuc.getNucVol()+"\t"+nuc.getNucCir()+"\t"+nuc.getNucElip1()+"\t"+nuc.getNucElip2()+"\t"+nuc.getNucInt()+"\t"+(nuc.getNucInt() - bgOFR1P[0] * (nuc.getNucVol()/volPix)) +"\t"+nuc.getNucDots()+"\t"+nuc.getNucDotsVol()+"\t"+nuc.getNucDotsInt()+
                             "\t"+nuc.getInnerNucVol()+"\t"+nuc.getInnerNucInt()+"\t"+(nuc.getInnerNucInt() - bgOFR1P[0] * (nuc.getInnerNucVol()/volPix))+"\t"+nuc.getInnerNucDots()+"\t"+nuc.getInnerNucDotsVol()+"\t"+nuc.getInnerNucDotsInt()+
                             "\t"+nuc.getInnerRingVol()+"\t"+nuc.getInnerRingInt()+"\t"+(nuc.getInnerRingInt() - bgOFR1P[0] * (nuc.getInnerRingVol()/volPix))+"\t"+nuc.getInnerRingDots()+"\t"+nuc.getInnerRingDotsVol()+"\t"+nuc.getInnerRingDotsInt()+
                             "\t"+nuc.getOuterRingVol()+"\t"+nuc.getOuterRingInt()+"\t"+(nuc.getOuterRingInt() - bgOFR1P[0] * (nuc.getOuterRingVol()/volPix))+"\t"+nuc.getOuterRingDots()+"\t"+nuc.getOuterRingDotsVol()+"\t"+nuc.getOuterRingDotsInt()+
                             "\t"+nuc.getCytoVol()+"\t"+nuc.getCytoInt()+"\t"+(nuc.getCytoInt() - bgOFR1P[0] * (nuc.getCytoVol()/volPix))+"\t"+nuc.getCytoDots()+"\t"+nuc.getCytoDotsVol()+"\t"+nuc.getCytoDotsInt()+"\n");
                     nucleus_Analyze.flush();
                 }
-                // Global measurements
-                
-                nucleusGlobal_Analyze.write(rootName+"\t"+nucPop.getNbObjects()+"\t"+sectionVol+"\t"+bgOFR1P[0]+"\t"+bgOFR1P[1]+"\t"+sumNucMaskedIntensity+"\t"+sumCellMaskedIntensity+"\n");
-                nucleusGlobal_Analyze.flush();               
-                tools.closeImages(imgZCropOFR1P);
+                        
+                tools.closeImages(imgOFR1P);
             }
             nucleus_Analyze.close();
-            nucleusGlobal_Analyze.close();
         } catch (IOException | DependencyException | ServiceException | FormatException  ex) {
             Logger.getLogger(OFR1P_NeuroD1.class.getName()).log(Level.SEVERE, null, ex);
         }

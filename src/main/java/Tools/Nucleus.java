@@ -25,7 +25,10 @@ public class Nucleus {
     private double nucDotsInt;
     // nucleus circularity
     private double nucCir;
-    
+    // nucleus rad1 Elipse
+    private double nucElip1;
+    // nucleus rad2 Elipse
+    private double nucElip2;
     // Inner nucleus volume
     private double innerNucVol;
     // Inner nucleus intensity
@@ -72,12 +75,14 @@ public class Nucleus {
 
   
 	
-	public Nucleus(int index, double nucVol, double nucCir, double nucInt, int nucDots, double nucDotsVol, double nucDotsInt, double innerNucVol, double innerNucInt, int innerNucDots, double innerNucDotsVol,
+	public Nucleus(int index, double nucVol, double nucCir, double nucElip1, double nucElip2, double nucInt, int nucDots, double nucDotsVol, double nucDotsInt, double innerNucVol, double innerNucInt, int innerNucDots, double innerNucDotsVol,
                     double innerNucDotsInt, double innerRingVol, double innerRingInt, int innerRingDots, double innerRingDotsVol, double innerRingDotsInt, double outerRingVol, double outerRingInt,
                     int outerRingDots, double outerRingDotsVol, double outerRingDotsInt, double cytoVol, double cytoInt, int cytoDots, double cytoDotsVol, double cytoDotsInt) {
             this.index = index;
             this.nucVol = nucVol;
             this.nucCir =nucCir; 
+            this.nucElip1 = nucElip1; 
+            this.nucElip2 =nucElip2; 
             this.nucInt = nucInt;
             this.nucDots = nucDots;
             this.nucDotsVol = nucDotsVol;
@@ -114,6 +119,14 @@ public class Nucleus {
         
         public void setNucCir(double nucCir) {
             this.nucCir = nucCir;
+	}
+        
+        public void setNucElip1(double nucElip1) {
+            this.nucElip1 = nucElip1;
+	}
+        
+        public void setNucElip2(double nucElip2) {
+            this.nucElip2 = nucElip2;
 	}
         
         public void setNucInt(double nucInt) {
@@ -222,6 +235,14 @@ public class Nucleus {
                 
         public double getNucCir() {
             return nucCir;
+        }
+                
+        public double getNucElip1() {
+            return nucElip1;
+        }
+                
+        public double getNucElip2() {
+            return nucElip2;
         }
         
          public double getNucInt() {
