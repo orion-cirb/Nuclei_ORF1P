@@ -198,13 +198,13 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 // Write resultsSearch (Ctrl+I)
                 for (Nucleus nuc : nucleus) {
                     nucleus_Analyze.write(rootName+"\t"+nuc.getIndex()+"\t"+nuc.getNucVol()+"\t"+nuc.getNucComp()+"\t"+nuc.getNucSph()+"\t"+nuc.getNucEllElong()+"\t"+
-                            nuc.getNucEllFlat()+"\t"+nuc.getNucInt()+"\t"+(nuc.getNucInt() - bgOFR1P*nuc.getNucVol()) +"\t"+nuc.getNucDots()+"\t"+nuc.getNucDotsVol()+"\t"+
-                            nuc.getNucDotsInt()+"\t"+nuc.getInnerNucVol()+"\t"+nuc.getInnerNucInt()+"\t"+(nuc.getInnerNucInt() - bgOFR1P * nuc.getInnerNucVol())+"\t"+
-                            nuc.getInnerNucDots()+"\t"+nuc.getInnerNucDotsVol()+"\t"+nuc.getInnerNucDotsInt()+"\t"+nuc.getInnerRingVol()+"\t"+nuc.getInnerRingInt()+"\t"+
-                            (nuc.getInnerRingInt() - bgOFR1P * nuc.getInnerRingVol())+"\t"+nuc.getInnerRingDots()+"\t"+nuc.getInnerRingDotsVol()+"\t"+nuc.getInnerRingDotsInt()+"\t"+
-                            nuc.getOuterRingVol()+"\t"+nuc.getOuterRingInt()+"\t"+(nuc.getOuterRingInt() - bgOFR1P * nuc.getOuterRingVol())+"\t"+nuc.getOuterRingDots()+"\t"+
-                            nuc.getOuterRingDotsVol()+"\t"+nuc.getOuterRingDotsInt()+"\t"+nuc.getCytoVol()+"\t"+nuc.getCytoInt()+"\t"+
-                            (nuc.getCytoInt() - bgOFR1P * nuc.getCytoVol())+"\t"+nuc.getCytoDots()+"\t"+nuc.getCytoDotsVol()+"\t"+nuc.getCytoDotsInt()+"\n");
+                        nuc.getNucEllFlat()+"\t"+nuc.getNucInt()+"\t"+(nuc.getNucInt() - bgOFR1P*nuc.getNucVol()) +"\t"+nuc.getNucDots()+"\t"+nuc.getNucDotsVol()+"\t"+
+                        nuc.getNucDotsInt()+"\t"+nuc.getInnerNucVol()+"\t"+nuc.getInnerNucInt()+"\t"+(nuc.getInnerNucInt() - bgOFR1P * nuc.getInnerNucVol())+"\t"+
+                        nuc.getInnerNucDots()+"\t"+nuc.getInnerNucDotsVol()+"\t"+nuc.getInnerNucDotsInt()+"\t"+nuc.getInnerRingVol()+"\t"+nuc.getInnerRingInt()+"\t"+
+                        (nuc.getInnerRingInt() - bgOFR1P * nuc.getInnerRingVol())+"\t"+nuc.getInnerRingDots()+"\t"+nuc.getInnerRingDotsVol()+"\t"+nuc.getInnerRingDotsInt()+"\t"+
+                        nuc.getOuterRingVol()+"\t"+nuc.getOuterRingInt()+"\t"+(nuc.getOuterRingInt() - bgOFR1P * nuc.getOuterRingVol())+"\t"+nuc.getOuterRingDots()+"\t"+
+                        nuc.getOuterRingDotsVol()+"\t"+nuc.getOuterRingDotsInt()+"\t"+nuc.getCytoVol()+"\t"+nuc.getCytoInt()+"\t"+
+                        (nuc.getCytoInt() - bgOFR1P * nuc.getCytoVol())+"\t"+nuc.getCytoDots()+"\t"+nuc.getCytoDotsVol()+"\t"+nuc.getCytoDotsInt()+"\n");
                     nucleus_Analyze.flush();
                 }
                         
