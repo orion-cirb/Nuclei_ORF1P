@@ -84,7 +84,7 @@ public class Jnucleus_Tools3D {
     public String stardistOutput = "Label Image"; 
     
     // Cellpose
-    public int cellPoseDiameter = 80;
+    public int cellPoseDiameter = 100;
     private boolean useGpu = true;
     private String[] cellposeModels = {"cyto","nuclei","tissuenet","livecell", "cyto2", "general","CP", "CPx", "TN1", "TN2", "TN3", "LC1",
         "LC2", "LC3", "LC4"};
