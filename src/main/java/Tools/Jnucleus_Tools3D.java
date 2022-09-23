@@ -9,16 +9,11 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.Prefs;
 import ij.gui.PointRoi;
-import ij.gui.WaitForUserDialog;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
-import ij.measure.Measurements;
-import ij.measure.ResultsTable;
 import ij.plugin.Duplicator;
-import ij.plugin.GaussianBlur3D;
 import ij.plugin.RGBStackMerge;
 import ij.plugin.ZProjector;
-import ij.plugin.filter.Analyzer;
 import ij.plugin.filter.RankFilters;
 import ij.process.ImageProcessor;
 import java.awt.Color;
@@ -39,25 +34,23 @@ import loci.formats.meta.IMetadata;
 import loci.formats.services.OMEXMLService;
 import loci.plugins.util.ImageProcessorReader;
 import mcib3d.geom.Point3D;
+import mcib3d.geom.Voxel3D;
 import mcib3d.geom2.BoundingBox;
 import mcib3d.geom2.Object3DComputation;
 import mcib3d.geom2.Object3DInt;
+import mcib3d.geom2.Object3DPlane;
 import mcib3d.geom2.Objects3DIntPopulation;
 import mcib3d.geom2.Objects3DIntPopulationComputation;
-import mcib3d.geom2.measurements.Measure2Colocalisation;
+import mcib3d.geom2.VoxelInt;
 import mcib3d.geom2.measurements.MeasureCentroid;
 import mcib3d.geom2.measurements.MeasureCompactness;
 import mcib3d.geom2.measurements.MeasureEllipsoid;
 import mcib3d.geom2.measurements.MeasureIntensity;
 import mcib3d.geom2.measurements.MeasureVolume;
 import mcib3d.geom2.measurementsPopulation.MeasurePopulationColocalisation;
-import mcib3d.image3d.ImageFloat;
 import mcib3d.image3d.ImageHandler;
 import mcib3d.image3d.ImageInt;
 import mcib3d.image3d.ImageLabeller;
-import mcib3d.image3d.distanceMap3d.EDT;
-import mcib3d.image3d.processing.FastFilters3D;
-import mcib3d.image3d.regionGrowing.Watershed3D;
 import org.apache.commons.io.FilenameUtils;
 
 
@@ -197,7 +190,7 @@ public class Jnucleus_Tools3D {
         gd.addMessage("Cells parameters", new Font(Font.MONOSPACED , Font.BOLD, 12), Color.blue);
         gd.addChoice("Cells segmentation method :",cellsDetectors, cellsDetectors[0]);
         gd.addDirectoryField("Cellpose environment path : ", cellPoseEnvDirPath);
-        gd.addChoice("Cellpose model : ", cellposeModels, cellposeModels[0]);
+        gd.addChoice("Cellpose model : ", cellposeModels, cellposeModels[4]);
         gd.addNumericField("Cell size (µm3) : ", cellPoseDiameter, 2);
         gd.addCheckbox("  Do dots detection", dotsDetect);
         gd.addMessage("Image calibration", new Font(Font.MONOSPACED , Font.BOLD, 12), Color.blue);
@@ -348,6 +341,8 @@ public class Jnucleus_Tools3D {
                 }
             }
         }
+        cellPop.setVoxelSizeXY(cal.pixelWidth);
+        cellPop.setVoxelSizeZ(cal.pixelDepth);
         return(cellPop);
     }
     
@@ -399,6 +394,7 @@ public class Jnucleus_Tools3D {
         System.out.println("-- Total nucleus Population :"+nucPopOrg.getNbObjects());
         // size filter
         Objects3DIntPopulation nucPop = new Objects3DIntPopulationComputation(nucPopOrg).getFilterSize(minNucVol/pixVol, maxNucVol/pixVol);
+        nucPop.resetLabels();
         int nbNucPop = nucPop.getNbObjects();
         System.out.println("-- Total nucleus Population after size filter: "+ nbNucPop);
         return(nucPop);
@@ -472,6 +468,7 @@ public class Jnucleus_Tools3D {
             label3D.setCalibration(cal);
             Objects3DIntPopulation nucPop = new Objects3DIntPopulationComputation(new Objects3DIntPopulation(label3D)).
                     getFilterSize(minNucVol/pixVol, maxNucVol/pixVol);
+            nucPop.resetLabels();
             closeImages(nuclei);
             return(nucPop);
         }
@@ -500,8 +497,8 @@ public class Jnucleus_Tools3D {
     */
     
     public void saveImageObjects(Objects3DIntPopulation pop1, Objects3DIntPopulation pop2, Objects3DIntPopulation pop3, ImagePlus img, String name, int labelsCh, int fontSize) {
-        
-        ImageHandler imgObj1 = ImageHandler.wrap(img).createSameDimensions();
+        ImagePlus imgObj = new Duplicator().run(img);
+        ImageHandler imgObj1 = ImageHandler.wrap(imgObj).createSameDimensions();
         ImageHandler imgObj2 = imgObj1.duplicate();
         ImageHandler imgObj3 = imgObj1.duplicate();
         // draw obj population
@@ -521,7 +518,7 @@ public class Jnucleus_Tools3D {
                 labelsObject(pop3, imgObj3.getImagePlus(), fontSize);
         }
        
-        ImagePlus[] imgColors = {imgObj1.getImagePlus(), imgObj2.getImagePlus(), imgObj3.getImagePlus(), img};
+        ImagePlus[] imgColors = {imgObj1.getImagePlus(), imgObj2.getImagePlus(), imgObj3.getImagePlus(), imgObj};
         ImagePlus imgObjects = new RGBStackMerge().mergeHyperstacks(imgColors, true);
         FileSaver ImgObjectsFile = new FileSaver(imgObjects);
         ImgObjectsFile.saveAsTiff(name); 
@@ -554,7 +551,7 @@ public class Jnucleus_Tools3D {
     * read mean intensity
     * @param img 
     */
-    public double[] find_background(ImagePlus img) {
+    public double find_background(ImagePlus img) {
       double[] bg = new double[2];
       ImagePlus imgProj = doZProjection(img, ZProjector.MIN_METHOD);
       ImageProcessor imp = imgProj.getProcessor();
@@ -562,7 +559,7 @@ public class Jnucleus_Tools3D {
       bg[1] = imp.getStatistics().stdDev;
       System.out.println("Background =  " + bg[0] + "+-" + bg[1]);
       closeImages(imgProj);
-      return(bg);
+      return(bg[0]+bg[1]);
     }
     
     /**
@@ -633,20 +630,29 @@ public class Jnucleus_Tools3D {
         Prefs.blackBackground = false;
         IJ.run(imgDup, "Convert to Mask", "method="+th+" background=Dark");
         Objects3DIntPopulation pop = new Objects3DIntPopulationComputation(getPopFromImage(imgDup)).getFilterSize(minDotVol, maxDotVol);
+        pop.resetLabels();
+        pop.setVoxelSizeXY(cal.pixelWidth);
+        pop.setVoxelSizeZ(cal.pixelDepth);
         closeImages(imgDup);
         return(pop);
     }
     
     /**
      * Find dots in cells 
+     * check if dot centroid inside nucleus
+     * @param allDots
+     * @param nucObj
+     * @return 
      */
-    public Objects3DIntPopulation findDotsPop(Objects3DIntPopulation allDots, Object3DInt nucObj) {
+     public Objects3DIntPopulation findDotsPop(Objects3DIntPopulation allDots, Object3DInt nucObj) {
+        Objects3DIntPopulation nucPop = new Objects3DIntPopulation();
+        nucPop.addObject(nucObj);
         Objects3DIntPopulation popDotsIn = new Objects3DIntPopulation();
+        MeasurePopulationColocalisation coloc = new MeasurePopulationColocalisation(allDots, nucPop);
         for (Object3DInt dot : allDots.getObjects3DInt()) {
-            Measure2Colocalisation coloc = new Measure2Colocalisation(dot, nucObj);
-            double colocVal = coloc.getValue(Measure2Colocalisation.COLOC_PC);
-                if (colocVal >= 50)
-                    popDotsIn.addObject(dot);
+            if (coloc.getValueObjectsPair(dot, nucPop.getFirstObject()) > 0.5*dot.size()) {
+                popDotsIn.addObject(dot);
+            }
         }
         return(popDotsIn);
     }
@@ -665,10 +671,10 @@ public class Jnucleus_Tools3D {
     /**
      * Find objects sum of Intensity
      */
-    private double findObjectsIntensity(Objects3DIntPopulation pop, ImagePlus img) {
+    private double findObjectsIntensity(Objects3DIntPopulation pop, ImageHandler imh) {
         double objsInt = 0;
         for (Object3DInt obj : pop.getObjects3DInt()) {
-            objsInt += new MeasureIntensity(obj).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
+            objsInt += new MeasureIntensity(obj, imh).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
         }
         return(objsInt);
     }
@@ -716,17 +722,19 @@ public class Jnucleus_Tools3D {
         for (Object3DInt nucObj : nucPop.getObjects3DInt()) {
             // nucleus
             double nucVol = new MeasureVolume(nucObj).getVolumeUnit();
-            double nucCir = new MeasureCompactness(nucObj).getValueMeasurement(MeasureCompactness.SPHER_CORRECTED);
-            Double[] nucElipse = new MeasureEllipsoid(nucObj).getRadii();
+            double nucComp = new MeasureCompactness(nucObj).getValueMeasurement(MeasureCompactness.COMP_CORRECTED);
+            double nucSph = new MeasureCompactness(nucObj).getValueMeasurement(MeasureCompactness.SPHER_CORRECTED);
+            double nucElongation = new MeasureEllipsoid(nucObj).getValueMeasurement(MeasureEllipsoid.ELL_ELONGATION);
+            double nucFlatness = new MeasureEllipsoid(nucObj).getValueMeasurement(MeasureEllipsoid.ELL_FLATNESS);
             double nucInt = new MeasureIntensity(nucObj, imh).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
-            IJ.showStatus("Finding dots in nucleus "+nucObj.getLabel()+"/"+nucPop.getNbObjects()+" ...");
+            //Finding dots in nucleus
             Objects3DIntPopulation nucDotsPop = findDotsPop(allDots, nucObj);
             int nucDots = nucDotsPop.getNbObjects();
             double nucDotsVol = 0;
             double nucDotsInt = 0;
             if (nucDots != 0) {
                 nucDotsVol = findObjectsVolume(nucDotsPop);
-                nucDotsInt = findObjectsIntensity(nucDotsPop, img);
+                nucDotsInt = findObjectsIntensity(nucDotsPop, imh);
             }
             
             // inner nucleus
@@ -734,18 +742,17 @@ public class Jnucleus_Tools3D {
             Object3DInt innerNucObj = innerNucPop.getObjectByLabel(nucObj.getLabel());
             double innerNucVol = new MeasureVolume(innerNucObj).getVolumeUnit();
             double innerNucInt = new MeasureIntensity(innerNucObj, imh).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
-            IJ.showStatus("Finding dots in inner nucleus "+innerNucObj.getLabel()+"/"+innerNucPop.getNbObjects()+" ...");
+            //Finding dots in inner nucleus
             Objects3DIntPopulation innerNucDotsPop = findDotsPop(allDots, innerNucObj);
             int innerNucDots = innerNucDotsPop.getNbObjects();
             double innerNucDotsVol = 0;
             double innerNucDotsInt = 0;
             if (innerNucDots != 0) {
                 innerNucDotsVol = findObjectsVolume(innerNucDotsPop);
-                innerNucDotsInt = findObjectsIntensity(innerNucDotsPop, img);
+                innerNucDotsInt = findObjectsIntensity(innerNucDotsPop, imh);
             }
             
-            // outer nucleus Ring
-            IJ.showStatus("Finding outer nucleus "+nucObj.getLabel()+"/"+nucPop.getNbObjects()+"  parameters ...");
+            //Finding outer nucleus
             Object3DInt outerNucObj = outerNucPop.getObjectByLabel(nucObj.getLabel());
             double outerNucVol = new MeasureVolume(outerNucObj).getVolumeUnit();
             double outerNucInt = new MeasureIntensity(outerNucObj, imh).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
@@ -756,7 +763,7 @@ public class Jnucleus_Tools3D {
             double outerNucDotsInt = 0;
             if (outerNucDots != 0) {
                 outerNucDotsVol = findObjectsVolume(outerNucDotsPop);
-                outerNucDotsInt = findObjectsIntensity(outerNucDotsPop, img);
+                outerNucDotsInt = findObjectsIntensity(outerNucDotsPop, imh);
             }
             
             // inner nucleus Ring
@@ -771,7 +778,7 @@ public class Jnucleus_Tools3D {
             double innerRingNucDotsInt = 0;
             if (innerRingNucDots != 0) {
                 innerRingNucDotsVol = findObjectsVolume(innerRingNucDotsPop);
-                innerRingNucDotsInt = findObjectsIntensity(innerRingNucDotsPop, img);
+                innerRingNucDotsInt = findObjectsIntensity(innerRingNucDotsPop, imh);
             }
             
             // cell cyto
@@ -787,15 +794,15 @@ public class Jnucleus_Tools3D {
                 cytoInt = new MeasureIntensity(cellObj, imh).getValueMeasurement(MeasureIntensity.INTENSITY_SUM);
                 IJ.showStatus("Finding dots in cytoplasm "+cellObj.getLabel()+"/"+cellsPop.getNbObjects()+" ...");
                 Objects3DIntPopulation cytoDotsPop = findDotsPop(allDots, cellObj);
-                cytoDotsPop.getNbObjects();
+                cytoDots = cytoDotsPop.getNbObjects();
                 if (cytoDots != 0) {
                     cytoDotsVol = findObjectsVolume(cytoDotsPop);
-                    cytoDotsInt = findObjectsIntensity(cytoDotsPop, img);
+                    cytoDotsInt = findObjectsIntensity(cytoDotsPop, imh);
                 }
             }
             
             // add cell parameters
-            Nucleus nucleus = new Nucleus((int)nucObj.getLabel(), nucVol, nucCir, nucElipse[0], nucElipse[1], nucInt, nucDots, nucDotsVol, nucDotsInt, innerNucVol, innerNucInt, innerNucDots, innerNucDotsVol, innerNucDotsInt,
+            Nucleus nucleus = new Nucleus((int)nucObj.getLabel(), nucVol, nucComp, nucSph, nucElongation, nucFlatness, nucInt, nucDots, nucDotsVol, nucDotsInt, innerNucVol, innerNucInt, innerNucDots, innerNucDotsVol, innerNucDotsInt,
             innerRingNucVol, innerRingNucInt, innerRingNucDots, innerRingNucDotsVol, innerRingNucDotsInt, outerNucVol, outerNucInt, outerNucDots, outerNucDotsVol, outerNucDotsInt,
                     cytoVol, cytoInt, cytoDots, cytoDotsVol, cytoDotsInt);
             nuclei.add(nucleus);

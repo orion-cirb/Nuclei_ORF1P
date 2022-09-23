@@ -21,7 +21,6 @@ import loci.formats.meta.IMetadata;
 import loci.formats.services.OMEXMLService;
 import loci.plugins.BF;
 import loci.plugins.util.ImageProcessorReader;
-import ij.plugin.Duplicator;
 import ij.plugin.PlugIn;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -93,7 +92,7 @@ public class OFR1P_NeuroD1 implements PlugIn {
 
 
             // write headers
-            String header= "Image Name\t# Nucleus\tNucleus Volume (µm3)\tNucleus Sphericity\tNucleus rad1 elipse\tNucleus rad2 elipse\tNucleus intensity\tNucleus corrected intensity\tNucleus dots number\tNucleus dots volume (µm3)\tNucleus dots intensity\t"
+            String header= "Image Name\t# Nucleus\tNucleus Volume (µm3)\tNucleus Sphericity\tNucleus Compactness\tNucleus elongation\tNucleus flatness\tNucleus intensity\tNucleus corrected intensity\tNucleus dots number\tNucleus dots volume (µm3)\tNucleus dots intensity\t"
                     + "Nucleus inner volume (µm3)" + "\t" + "Nucleus inner intensity\tNucleus inner corrected intensity\tNucleus inner dots number\tNucleus inner dots volume (µm3)\tNucleus inner dots intensity\t"
                     + "Nucleus inner ring volume (µm3)" + "\t" + "Nucleus inner ring intensity\tNucleus inner ring corrected intensity\tNucleus inner ring dots number\tNucleus inner ring dots volume (µm3)\tNucleus inner ring dots intensity\t"
                     + "Nucleus outer ring volume (µm3)" + "\t" + "Nucleus outer ring intensity\tNucleus outer ring corrected intensity\tNucleus outer ring dots number\tNucleus outer ring dots volume (µm3)\tNucleus outer ring dots intensity\t"
@@ -120,7 +119,6 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 rootName = FilenameUtils.getBaseName(f);
                 reader.setId(f);
                 ImporterOptions options = new ImporterOptions();
-                    
                         
                 /** 
                  * read nd
@@ -146,7 +144,7 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 // Find nucleus
                 Objects3DIntPopulation nucPop =  tools.stardistNucleiPop(imgNucleus);
                 System.out.println(nucPop.getNbObjects()+" nucleus founds");
-                
+
                 // Find inner/outer ring nucleus
                 // outer
                 System.out.println("Finding outer ring ....");
@@ -168,7 +166,7 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 ImagePlus imgOFR1P = BF.openImagePlus(options)[channel];
                 
                 // Find background
-                double[] bgOFR1P = tools.find_background(imgOFR1P);
+                double bgOFR1P = tools.find_background(imgOFR1P);
                 
                 // Find cells cytoplasm
                 Objects3DIntPopulation cellPop = new Objects3DIntPopulation();
@@ -197,13 +195,16 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 // tags nucleus with parameters
                 ArrayList<Nucleus> nucleus = tools.tagsNuclei(imgOFR1P, nucPop, innerNucPop, innerRingPop, outerRingPop, cellPop, allDotsPop);
                              
-                // Write results
+                // Write resultsSearch (Ctrl+I)
                 for (Nucleus nuc : nucleus) {
-                    nucleus_Analyze.write(rootName+"\t"+nuc.getIndex()+"\t"+nuc.getNucVol()+"\t"+nuc.getNucCir()+"\t"+nuc.getNucElip1()+"\t"+nuc.getNucElip2()+"\t"+nuc.getNucInt()+"\t"+(nuc.getNucInt() - bgOFR1P[0] * (nuc.getNucVol()/volPix)) +"\t"+nuc.getNucDots()+"\t"+nuc.getNucDotsVol()+"\t"+nuc.getNucDotsInt()+
-                            "\t"+nuc.getInnerNucVol()+"\t"+nuc.getInnerNucInt()+"\t"+(nuc.getInnerNucInt() - bgOFR1P[0] * (nuc.getInnerNucVol()/volPix))+"\t"+nuc.getInnerNucDots()+"\t"+nuc.getInnerNucDotsVol()+"\t"+nuc.getInnerNucDotsInt()+
-                            "\t"+nuc.getInnerRingVol()+"\t"+nuc.getInnerRingInt()+"\t"+(nuc.getInnerRingInt() - bgOFR1P[0] * (nuc.getInnerRingVol()/volPix))+"\t"+nuc.getInnerRingDots()+"\t"+nuc.getInnerRingDotsVol()+"\t"+nuc.getInnerRingDotsInt()+
-                            "\t"+nuc.getOuterRingVol()+"\t"+nuc.getOuterRingInt()+"\t"+(nuc.getOuterRingInt() - bgOFR1P[0] * (nuc.getOuterRingVol()/volPix))+"\t"+nuc.getOuterRingDots()+"\t"+nuc.getOuterRingDotsVol()+"\t"+nuc.getOuterRingDotsInt()+
-                            "\t"+nuc.getCytoVol()+"\t"+nuc.getCytoInt()+"\t"+(nuc.getCytoInt() - bgOFR1P[0] * (nuc.getCytoVol()/volPix))+"\t"+nuc.getCytoDots()+"\t"+nuc.getCytoDotsVol()+"\t"+nuc.getCytoDotsInt()+"\n");
+                    nucleus_Analyze.write(rootName+"\t"+nuc.getIndex()+"\t"+nuc.getNucVol()+"\t"+nuc.getNucComp()+"\t"+nuc.getNucSph()+"\t"+nuc.getNucEllElong()+"\t"+
+                            nuc.getNucEllFlat()+"\t"+nuc.getNucInt()+"\t"+(nuc.getNucInt() - bgOFR1P*nuc.getNucVol()) +"\t"+nuc.getNucDots()+"\t"+nuc.getNucDotsVol()+"\t"+
+                            nuc.getNucDotsInt()+"\t"+nuc.getInnerNucVol()+"\t"+nuc.getInnerNucInt()+"\t"+(nuc.getInnerNucInt() - bgOFR1P * nuc.getInnerNucVol())+"\t"+
+                            nuc.getInnerNucDots()+"\t"+nuc.getInnerNucDotsVol()+"\t"+nuc.getInnerNucDotsInt()+"\t"+nuc.getInnerRingVol()+"\t"+nuc.getInnerRingInt()+"\t"+
+                            (nuc.getInnerRingInt() - bgOFR1P * nuc.getInnerRingVol())+"\t"+nuc.getInnerRingDots()+"\t"+nuc.getInnerRingDotsVol()+"\t"+nuc.getInnerRingDotsInt()+"\t"+
+                            nuc.getOuterRingVol()+"\t"+nuc.getOuterRingInt()+"\t"+(nuc.getOuterRingInt() - bgOFR1P * nuc.getOuterRingVol())+"\t"+nuc.getOuterRingDots()+"\t"+
+                            nuc.getOuterRingDotsVol()+"\t"+nuc.getOuterRingDotsInt()+"\t"+nuc.getCytoVol()+"\t"+nuc.getCytoInt()+"\t"+
+                            (nuc.getCytoInt() - bgOFR1P * nuc.getCytoVol())+"\t"+nuc.getCytoDots()+"\t"+nuc.getCytoDotsVol()+"\t"+nuc.getCytoDotsInt()+"\n");
                     nucleus_Analyze.flush();
                 }
                         
