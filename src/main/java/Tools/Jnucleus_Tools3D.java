@@ -385,7 +385,7 @@ public class Jnucleus_Tools3D {
                     imgDup = img.resize((int)(width*factor), (int)(height*factor), 1, "none");
                     resized = true;
                 }
-                IJ.run(img, "Remove Outliers", "block_radius_x=20 block_radius_y=20 standard_deviations=1 which=Dark stack");
+                IJ.run(imgDup, "Remove Outliers", "block_radius_x=20 block_radius_y=20 standard_deviations=1 which=Dark stack");
                 model = modelsPath+File.separator+stardistModelNuc;
                 stardistProbThresh = stardistProbThreshNuc;
                 stardistOverlayThresh = stardistOverlayThreshNuc;
@@ -404,15 +404,14 @@ public class Jnucleus_Tools3D {
             // Go StarDist
             File starDistModelFile = new File(model);
             StarDist2D star = new StarDist2D(syncObject, starDistModelFile);
-            star.loadInput(img);
+            star.loadInput(imgDup);
             star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThresh, stardistOverlayThresh, stardistOutput);
             star.run();
-            closeImages(img);
+            closeImages(imgDup);
             // label in 3D
             ImagePlus imgLabels = (resized) ? star.associateLabels().resize(width, height, 1, "none") : star.associateLabels();
             ImageInt label3D = ImageInt.wrap(imgLabels);
             label3D.setCalibration(cal);
-            
             Objects3DIntPopulation objPop = new Objects3DIntPopulationComputation(new Objects3DIntPopulation(label3D)).
                     getFilterSize(minVol/pixVol, maxVol/pixVol);
             objPop.resetLabels();
