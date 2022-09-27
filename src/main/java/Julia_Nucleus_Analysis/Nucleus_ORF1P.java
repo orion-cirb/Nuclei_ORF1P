@@ -31,7 +31,7 @@ import org.apache.commons.io.FilenameUtils;
 
 
 /*
- * Find Nucleus intensity in OFR1P channel (488)
+ * Find Nucleus intensity in ORF1P channel (488)
  * and cytoplasmic intensity in NeuroD1 channel (561)
  * 
  */
@@ -40,7 +40,7 @@ import org.apache.commons.io.FilenameUtils;
  *
  * @author phm
  */
-public class OFR1P_NeuroD1 implements PlugIn {
+public class Nucleus_ORF1P implements PlugIn {
     
     Jnucleus_Tools3D tools = new Jnucleus_Tools3D();
     
@@ -161,55 +161,55 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 tools.closeImages(imgNucleus);
                 
                 // open OFRP1 Channel
-                System.out.println("Opening OFR1P channel " + channels.get(1)+ " ...");
+                System.out.println("Opening ORF1P channel " + channels.get(1)+ " ...");
                 channel = channels.indexOf(chs.get(1));
-                ImagePlus imgOFR1P = BF.openImagePlus(options)[channel];
+                ImagePlus imgORF1P = BF.openImagePlus(options)[channel];
                 
                 // Find background
-                double bgOFR1P = tools.find_background(imgOFR1P);
+                double bgORF1P = tools.find_background(imgORF1P);
                 
                 // Find cells cytoplasm
                 Objects3DIntPopulation cellPop = new Objects3DIntPopulation();
-                cellPop = tools.cellPoseCellsPop(imgOFR1P, nucPop);
+                cellPop = tools.cellPoseCellsPop(imgORF1P, nucPop);
                 System.out.println(cellPop.getNbObjects()+" cells found with nucleus");
                 
                 // Save cells cytoplasm
-                tools.saveImageObjects(null, cellPop, nucPop, imgOFR1P, outDirResults+rootName+"_CellsCytoplasmObjects.tif", 2, 40);
+                tools.saveImageObjects(null, cellPop, nucPop, imgORF1P, outDirResults+rootName+"_CellsCytoplasmObjects.tif", 2, 40);
 
                 // Dots detections
                 // All dots population
                 Objects3DIntPopulation allDotsPop = new Objects3DIntPopulation();
                 if (tools.dotsDetect)
-                    allDotsPop = tools.stardistObjectsPop(imgOFR1P, "dots");
+                    allDotsPop = tools.stardistObjectsPop(imgORF1P, "dots");
                 System.out.println(allDotsPop.getNbObjects()+" dots found");
 
                 // Save image objects
-                tools.saveImageObjects(null, outerRingPop, nucPop, imgOFR1P, outDirResults+rootName+"_OuterRingObjects.tif", 0, 40);
-                tools.saveImageObjects(innerNucPop, innerRingPop, null, imgOFR1P, outDirResults+rootName+"_innerRingObjects.tif", 0, 40);
+                tools.saveImageObjects(null, outerRingPop, nucPop, imgORF1P, outDirResults+rootName+"_OuterRingObjects.tif", 0, 40);
+                tools.saveImageObjects(innerNucPop, innerRingPop, null, imgORF1P, outDirResults+rootName+"_innerRingObjects.tif", 0, 40);
                 if (tools.dotsDetect)
-                    tools.saveImageObjects(allDotsPop, cellPop, nucPop, imgOFR1P, outDirResults+rootName+"_dotsObjects.tif", 3, 40);
+                    tools.saveImageObjects(allDotsPop, cellPop, nucPop, imgORF1P, outDirResults+rootName+"_dotsObjects.tif", 3, 40);
                 
                 // tags nucleus with parameters
-                ArrayList<Nucleus> nucleus = tools.tagsNuclei(imgOFR1P, nucPop, innerNucPop, innerRingPop, outerRingPop, cellPop, allDotsPop);
+                ArrayList<Nucleus> nucleus = tools.tagsNuclei(imgORF1P, nucPop, innerNucPop, innerRingPop, outerRingPop, cellPop, allDotsPop);
                              
                 // Write resultsSearch (Ctrl+I)
                 for (Nucleus nuc : nucleus) {
                     nucleus_Analyze.write(rootName+"\t"+nuc.getIndex()+"\t"+nuc.getNucVol()+"\t"+nuc.getNucComp()+"\t"+nuc.getNucSph()+"\t"+nuc.getNucEllElong()+"\t"+
-                        nuc.getNucEllFlat()+"\t"+nuc.getNucInt()+"\t"+(nuc.getNucInt() - bgOFR1P*nuc.getNucVol()) +"\t"+nuc.getNucDots()+"\t"+nuc.getNucDotsVol()+"\t"+
-                        nuc.getNucDotsInt()+"\t"+(nuc.getNucDotsInt()- bgOFR1P*nuc.getNucDotsVol())+"\t"+nuc.getInnerNucVol()+"\t"+nuc.getInnerNucInt()+"\t"+(nuc.getInnerNucInt() - bgOFR1P * nuc.getInnerNucVol())+"\t"+
-                        nuc.getInnerNucDots()+"\t"+nuc.getInnerNucDotsVol()+"\t"+nuc.getInnerNucDotsInt()+"\t"+(nuc.getInnerNucDotsInt() - bgOFR1P*nuc.getInnerNucDotsVol())+"\t"+nuc.getInnerRingVol()+"\t"+nuc.getInnerRingInt()+"\t"+
-                        (nuc.getInnerRingInt() - bgOFR1P * nuc.getInnerRingVol())+"\t"+nuc.getInnerRingDots()+"\t"+nuc.getInnerRingDotsVol()+"\t"+nuc.getInnerRingDotsInt()+"\t"+(nuc.getInnerRingDotsInt()- bgOFR1P * nuc.getInnerRingDotsVol())+"\t"+
-                        nuc.getOuterRingVol()+"\t"+nuc.getOuterRingInt()+"\t"+(nuc.getOuterRingInt() - bgOFR1P * nuc.getOuterRingVol())+"\t"+nuc.getOuterRingDots()+"\t"+
-                        nuc.getOuterRingDotsVol()+"\t"+nuc.getOuterRingDotsInt()+"\t"+(nuc.getOuterRingDotsInt() - bgOFR1P*nuc.getOuterRingDotsVol())+"\t"+nuc.getCytoVol()+"\t"+nuc.getCytoInt()+"\t"+
-                        (nuc.getCytoInt() - bgOFR1P * nuc.getCytoVol())+"\t"+nuc.getCytoDots()+"\t"+nuc.getCytoDotsVol()+"\t"+nuc.getCytoDotsInt()+"\t"+(nuc.getCytoDotsInt()-bgOFR1P*nuc.getCytoDotsVol())+"\n");
+                        nuc.getNucEllFlat()+"\t"+nuc.getNucInt()+"\t"+(nuc.getNucInt() - bgORF1P*nuc.getNucVol()) +"\t"+nuc.getNucDots()+"\t"+nuc.getNucDotsVol()+"\t"+
+                        nuc.getNucDotsInt()+"\t"+(nuc.getNucDotsInt()- bgORF1P*nuc.getNucDotsVol())+"\t"+nuc.getInnerNucVol()+"\t"+nuc.getInnerNucInt()+"\t"+(nuc.getInnerNucInt() - bgORF1P * nuc.getInnerNucVol())+"\t"+
+                        nuc.getInnerNucDots()+"\t"+nuc.getInnerNucDotsVol()+"\t"+nuc.getInnerNucDotsInt()+"\t"+(nuc.getInnerNucDotsInt() - bgORF1P*nuc.getInnerNucDotsVol())+"\t"+nuc.getInnerRingVol()+"\t"+nuc.getInnerRingInt()+"\t"+
+                        (nuc.getInnerRingInt() - bgORF1P * nuc.getInnerRingVol())+"\t"+nuc.getInnerRingDots()+"\t"+nuc.getInnerRingDotsVol()+"\t"+nuc.getInnerRingDotsInt()+"\t"+(nuc.getInnerRingDotsInt()- bgORF1P * nuc.getInnerRingDotsVol())+"\t"+
+                        nuc.getOuterRingVol()+"\t"+nuc.getOuterRingInt()+"\t"+(nuc.getOuterRingInt() - bgORF1P * nuc.getOuterRingVol())+"\t"+nuc.getOuterRingDots()+"\t"+
+                        nuc.getOuterRingDotsVol()+"\t"+nuc.getOuterRingDotsInt()+"\t"+(nuc.getOuterRingDotsInt() - bgORF1P*nuc.getOuterRingDotsVol())+"\t"+nuc.getCytoVol()+"\t"+nuc.getCytoInt()+"\t"+
+                        (nuc.getCytoInt() - bgORF1P * nuc.getCytoVol())+"\t"+nuc.getCytoDots()+"\t"+nuc.getCytoDotsVol()+"\t"+nuc.getCytoDotsInt()+"\t"+(nuc.getCytoDotsInt()-bgORF1P*nuc.getCytoDotsVol())+"\n");
                     nucleus_Analyze.flush();
                 }
                         
-                tools.closeImages(imgOFR1P);
+                tools.closeImages(imgORF1P);
             }
             nucleus_Analyze.close();
         } catch (IOException | DependencyException | ServiceException | FormatException  ex) {
-            Logger.getLogger(OFR1P_NeuroD1.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Nucleus_ORF1P.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         
