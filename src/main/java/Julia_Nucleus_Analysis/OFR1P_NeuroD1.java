@@ -106,7 +106,7 @@ public class OFR1P_NeuroD1 implements PlugIn {
             List<String> chs = new ArrayList();
             List<String> channelsName = new ArrayList();
             channelsName.add("Nucleus");
-            channelsName.add("OFR1P");
+            channelsName.add("ORF1P");
             if (channels.size() > 1) {
                 chs = tools.dialog(channels, channelsName);
                 if ( chs == null) {
@@ -142,7 +142,7 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 double sectionVol = (imgNucleus.getWidth() * imgNucleus.getHeight() * imgNucleus.getNSlices() * volPix);
                 
                 // Find nucleus
-                Objects3DIntPopulation nucPop =  tools.stardistNucleiPop(imgNucleus);
+                Objects3DIntPopulation nucPop =  tools.stardistObjectsPop(imgNucleus, "nucleus");
                 System.out.println(nucPop.getNbObjects()+" nucleus founds");
 
                 // Find inner/outer ring nucleus
@@ -170,10 +170,7 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 
                 // Find cells cytoplasm
                 Objects3DIntPopulation cellPop = new Objects3DIntPopulation();
-                if(tools.cellDetector.equals("CellPose"))
-                    cellPop = tools.cellPoseCellsPop(imgOFR1P, nucPop);
-                else
-                    cellPop = tools.findCells(imgOFR1P, nucPop);
+                cellPop = tools.cellPoseCellsPop(imgOFR1P, nucPop);
                 System.out.println(cellPop.getNbObjects()+" cells found with nucleus");
                 
                 // Save cells cytoplasm
@@ -183,7 +180,7 @@ public class OFR1P_NeuroD1 implements PlugIn {
                 // All dots population
                 Objects3DIntPopulation allDotsPop = new Objects3DIntPopulation();
                 if (tools.dotsDetect)
-                    allDotsPop = tools.find_dots(imgOFR1P, 2, 1, "Triangle");
+                    allDotsPop = tools.stardistObjectsPop(imgOFR1P, "dots");
                 System.out.println(allDotsPop.getNbObjects()+" dots found");
 
                 // Save image objects

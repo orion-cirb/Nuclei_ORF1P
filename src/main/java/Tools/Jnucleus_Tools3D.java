@@ -34,14 +34,11 @@ import loci.formats.meta.IMetadata;
 import loci.formats.services.OMEXMLService;
 import loci.plugins.util.ImageProcessorReader;
 import mcib3d.geom.Point3D;
-import mcib3d.geom.Voxel3D;
 import mcib3d.geom2.BoundingBox;
 import mcib3d.geom2.Object3DComputation;
 import mcib3d.geom2.Object3DInt;
-import mcib3d.geom2.Object3DPlane;
 import mcib3d.geom2.Objects3DIntPopulation;
 import mcib3d.geom2.Objects3DIntPopulationComputation;
-import mcib3d.geom2.VoxelInt;
 import mcib3d.geom2.measurements.MeasureCentroid;
 import mcib3d.geom2.measurements.MeasureCompactness;
 import mcib3d.geom2.measurements.MeasureEllipsoid;
@@ -65,8 +62,8 @@ public class Jnucleus_Tools3D {
 
     public double minNucVol= 25;
     public double maxNucVol = 500;
-    public double minDotVol= 0.05;
-    public double maxDotVol = 50;
+    public double minDotVol= 0.5;
+    public double maxDotVol = 800;
     public float innerNucDil = 1;
     public float outerNucDil = 2;
     public boolean dotsDetect = true;
@@ -78,35 +75,33 @@ public class Jnucleus_Tools3D {
     public final double stardistPercentileBottom = 0.2;
     public final double stardistPercentileTop = 99.8;
     public final double stardistProbThreshNuc = 0.65;
-    public final double stardistOverlayThreshNuc = 0.01;
+    public final double stardistOverlayThreshNuc = 0.5;
+    public final double stardistProbThreshDots = 0.02;
+    public final double stardistOverlayThreshDots = 0.5;
     public File modelsPath = new File(IJ.getDirectory("imagej")+File.separator+"models");
-    public String stardistModel = "";
+    public String stardistModelNuc = "";
+    public String stardistModelDots = "";
     public String stardistOutput = "Label Image"; 
     
     // Cellpose
     public int cellPoseDiameter = 100;
     private boolean useGpu = true;
-    private String[] cellposeModels = {"cyto","nuclei","tissuenet","livecell", "cyto2", "general","CP", "CPx", "TN1", "TN2", "TN3", "LC1",
-        "LC2", "LC3", "LC4"};
-    public String cellModel = "";
-    private String cellPoseEnvDirPath = "/home/phm/.conda/envs/cellpose";
-    public String cellDetector = "";
-    
-    
+    public String cellModel = "cyto2";
+    private String cellPoseEnvDirPath = "/home/phm/.conda/envs/cellpose";    
     
     public final ImageIcon icon = new ImageIcon(this.getClass().getResource("/Orion_icon.png"));
  
     /*
     Find starDist models in Fiji models folder
     */
-    public String[] findStardistModels() {
+    public ArrayList<String> findStardistModels() {
         FilenameFilter filter = (dir, name) -> name.endsWith(".zip");
         File[] modelList = modelsPath.listFiles(filter);
-        String[] models = new String[modelList.length];
+        ArrayList<String> models = new ArrayList<>();
         for (int i = 0; i < modelList.length; i++) {
-            models[i] = modelList[i].getName();
+            models.add(modelList[i].getName());
         }
-        Arrays.sort(models);
+        Collections.sort(models);
         return(models);
     } 
     
@@ -160,8 +155,8 @@ public class Jnucleus_Tools3D {
     
     public ArrayList dialog(List<String> channels, List<String> channelsName) {
         ArrayList ch = new ArrayList();
-        String[] models = findStardistModels();
-        String[] cellsDetectors = {"CellPose", "CellOutiner"};
+        String chNames[] = channels.toArray(new String[channels.size()]);
+        ArrayList<String> models = findStardistModels();
         if (IJ.isWindows())
             cellPoseEnvDirPath = System.getProperty("user.home")+"\\miniconda3\\envs\\CellPose";
         GenericDialogPlus gd = new GenericDialogPlus("Parameters");
@@ -170,58 +165,40 @@ public class Jnucleus_Tools3D {
         gd.addMessage("Choose channels", new Font(Font.MONOSPACED , Font.BOLD, 12), Color.blue);
         int index = 0;
         for (String chName : channelsName) {
-            gd.addChoice(chName, channels.toArray(new String[0]), channels.get(index));
-            index++;
+            gd.addChoice(chName, chNames, channels.get(0));
         }
         gd.addMessage("Nucleus parameters", new Font(Font.MONOSPACED , Font.BOLD, 12), Color.blue);
         gd.addMessage("StarDist model", Font.getFont("Monospace"), Color.blue);
-        if (models.length > 0) {
-            gd.addChoice("StarDist model :",models, models[0]);
-        }
-        else {
+        if (models.size() == 0) {
             gd.addMessage("No StarDist model found in Fiji !!", Font.getFont("Monospace"), Color.red);
-            gd.addFileField("StarDist model :", stardistModel);
+            return(null);
         }
         gd.addNumericField("Min nucleus vol. :", minNucVol);
         gd.addNumericField("Max nucleus vol. :", maxNucVol);   
-        gd.addMessage("Nucleus dounuts", Font.getFont("Monospace"), Color.blue);
+        gd.addMessage("Nucleus doughnuts", Font.getFont("Monospace"), Color.blue);
         gd.addNumericField("Nucleus cyto ring (µm) :", outerNucDil);
         gd.addNumericField("Nucleus inner ring (µm) :", innerNucDil);
         gd.addMessage("Cells parameters", new Font(Font.MONOSPACED , Font.BOLD, 12), Color.blue);
-        gd.addChoice("Cells segmentation method :",cellsDetectors, cellsDetectors[0]);
         gd.addDirectoryField("Cellpose environment path : ", cellPoseEnvDirPath);
-        gd.addChoice("Cellpose model : ", cellposeModels, cellposeModels[4]);
-        gd.addNumericField("Cell size (µm3) : ", cellPoseDiameter, 2);
         gd.addCheckbox("  Do dots detection", dotsDetect);
         gd.addMessage("Image calibration", new Font(Font.MONOSPACED , Font.BOLD, 12), Color.blue);
         gd.addNumericField("XY cal. :", cal.pixelWidth);
         gd.addNumericField("Z cal.  :", cal.pixelDepth);
         gd.showDialog();
-        for (int i = 0; i < index; i++)
+        for (int i = 0; i < channelsName.size(); i++)
             ch.add(i, gd.getNextChoice());
-        if (models.length > 0) {
-            stardistModel = modelsPath+File.separator+gd.getNextChoice();
-        }
-        else {
-            stardistModel = gd.getNextString();
-        }
-        if (stardistModel.isEmpty()) {
-            IJ.error("No model specify !!");
-            return(null);
-        }
         minNucVol = (float)gd.getNextNumber();
         maxNucVol = (float)gd.getNextNumber();
         outerNucDil = (float)gd.getNextNumber();
         innerNucDil = (float)gd.getNextNumber();
-        cellDetector = gd.getNextChoice();
         cellPoseEnvDirPath = gd.getNextString();
-        cellModel = gd.getNextChoice();
-        cellPoseDiameter = (int)gd.getNextNumber();
         dotsDetect = gd.getNextBoolean();
         cal.pixelWidth = gd.getNextNumber();
         cal.pixelDepth = gd.getNextNumber();
         cal.pixelHeight =  cal.pixelWidth;
         pixVol = (float)(cal.pixelWidth*cal.pixelHeight*cal.pixelDepth);
+        stardistModelNuc = "dsb2018_heavy_augment.zip";
+        stardistModelDots = "pmls2.zip";
         if(gd.wasCanceled())
             ch = null;
         return(ch);
@@ -388,89 +365,59 @@ public class Jnucleus_Tools3D {
         return(cellPop);
     }
     
-    
-    public Objects3DIntPopulation findNucleus(ImagePlus imgNuc, int blur1, int blur2, int radOut, String thMethod) {
-        Objects3DIntPopulation nucPopOrg = find_nucleus2(imgNuc, blur1, blur2, radOut, thMethod);
-        System.out.println("-- Total nucleus Population :"+nucPopOrg.getNbObjects());
-        // size filter
-        Objects3DIntPopulation nucPop = new Objects3DIntPopulationComputation(nucPopOrg).getFilterSize(minNucVol/pixVol, maxNucVol/pixVol);
-        nucPop.resetLabels();
-        int nbNucPop = nucPop.getNbObjects();
-        System.out.println("-- Total nucleus Population after size filter: "+ nbNucPop);
-        return(nucPop);
-    }
         
-    /**
-     * Nucleus segmentation 2
-     * @param imgNuc
-     * @return cellPop
+    /** 
+    Do z slice by slice stardist 
+    * return objects population
      */
-    public Objects3DIntPopulation find_nucleus2(ImagePlus imgNuc, int blur1, int blur2, int radOut, String thMethod) {
-        ImagePlus img = new Duplicator().run(imgNuc);
-        ImageStack stack = new ImageStack(img.getWidth(), imgNuc.getHeight());
-        for (int i = 1; i <= img.getStackSize(); i++) {
-            IJ.showStatus("Finding nucleus section "+i+" / "+img.getStackSize());
-            img.setZ(i);
-            img.updateAndDraw();
-            IJ.run(img, "Nuclei Outline", "blur="+blur1+" blur2="+blur2+" threshold_method="+thMethod+" outlier_radius="+radOut+" outlier_threshold=1 max_nucleus_size=500 "
-                    + "min_nucleus_size=30 erosion=5 expansion_inner=5 expansion=5 results_overlay");
-            img.setZ(1);
-            img.updateAndDraw();
-            ImagePlus mask = new ImagePlus("mask", img.createRoiMask().getBufferedImage());
-            ImageProcessor ip =  mask.getProcessor();
-            ip.invertLut();
-            for (int n = 0; n < 3; n++) 
-                ip.erode();
-            stack.addSlice(ip);
-        }
-        ImagePlus imgStack = new ImagePlus("Nucleus", stack); 
-        imgStack.setCalibration(cal);
-        IJ.run(imgStack, "Watershed", "stack");
-        Objects3DIntPopulation nucPop = getPopFromImage(imgStack);
-        closeImages(img);
-        closeImages(imgStack);
-        return(nucPop);
-    }
-    
-    
-    /** Look for all nuclei
-         Do z slice by slice stardist 
-         * return nuclei population
-         */
-        public Objects3DIntPopulation stardistNucleiPop(ImagePlus imgNuc) throws IOException{
+        public Objects3DIntPopulation stardistObjectsPop(ImagePlus img, String objectType) throws IOException{
             // resize to be in a stardist-friendly scale
-            ImagePlus img = null;
-            int width = imgNuc.getWidth();
-            int height = imgNuc.getHeight();
+            String model = "";
+            double stardistProbThresh, stardistOverlayThresh;
+            double minVol, maxVol;
+            ImagePlus imgDup = null;
+            int width = img.getWidth();
+            int height = img.getHeight();
             float factor = 0.25f;
             boolean resized = false;
-            if (imgNuc.getWidth() > 1024) {
-                img = imgNuc.resize((int)(width*factor), (int)(height*factor), 1, "none");
-                resized = true;
+            if (objectType.equals("nucleus")) {
+                if (img.getWidth() > 1024) {
+                    imgDup = img.resize((int)(width*factor), (int)(height*factor), 1, "none");
+                    resized = true;
+                }
+                IJ.run(img, "Remove Outliers", "block_radius_x=20 block_radius_y=20 standard_deviations=1 which=Dark stack");
+                model = modelsPath+File.separator+stardistModelNuc;
+                stardistProbThresh = stardistProbThreshNuc;
+                stardistOverlayThresh = stardistOverlayThreshNuc;
+                minVol = minNucVol;
+                maxVol = maxNucVol;
             }
-            else
-                img = new Duplicator().run(imgNuc);
+            else {
+                imgDup = new Duplicator().run(img);
+                model = modelsPath+File.separator+stardistModelDots;
+                stardistProbThresh = stardistProbThreshDots;
+                stardistOverlayThresh = stardistOverlayThreshDots;
+                minVol = minDotVol;
+                maxVol = maxDotVol;
+            }
             
-            IJ.run(img, "Remove Outliers", "block_radius_x=20 block_radius_y=20 standard_deviations=1 which=Dark stack");
-            // Clear unfocus Z plan
-            Find_focused_slices focus = new Find_focused_slices();
-            focus.run(img);
             // Go StarDist
-            File starDistModelFile = new File(stardistModel);
+            File starDistModelFile = new File(model);
             StarDist2D star = new StarDist2D(syncObject, starDistModelFile);
             star.loadInput(img);
-            star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThreshNuc, stardistOverlayThreshNuc, stardistOutput);
+            star.setParams(stardistPercentileBottom, stardistPercentileTop, stardistProbThresh, stardistOverlayThresh, stardistOutput);
             star.run();
             closeImages(img);
             // label in 3D
-            ImagePlus nuclei = (resized) ? star.associateLabels().resize(width, height, 1, "none") : star.associateLabels();
-            ImageInt label3D = ImageInt.wrap(nuclei);
+            ImagePlus imgLabels = (resized) ? star.associateLabels().resize(width, height, 1, "none") : star.associateLabels();
+            ImageInt label3D = ImageInt.wrap(imgLabels);
             label3D.setCalibration(cal);
-            Objects3DIntPopulation nucPop = new Objects3DIntPopulationComputation(new Objects3DIntPopulation(label3D)).
-                    getFilterSize(minNucVol/pixVol, maxNucVol/pixVol);
-            nucPop.resetLabels();
-            closeImages(nuclei);
-            return(nucPop);
+            
+            Objects3DIntPopulation objPop = new Objects3DIntPopulationComputation(new Objects3DIntPopulation(label3D)).
+                    getFilterSize(minVol/pixVol, maxVol/pixVol);
+            objPop.resetLabels();
+            closeImages(imgLabels);
+            return(objPop);
         }
     
    
