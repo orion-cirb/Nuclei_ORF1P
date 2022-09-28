@@ -28,6 +28,7 @@ import java.util.List;
 import loci.plugins.in.ImporterOptions;
 import mcib3d.geom2.Objects3DIntPopulation;
 import org.apache.commons.io.FilenameUtils;
+import org.scijava.util.ArrayUtils;
 
 
 /*
@@ -85,7 +86,7 @@ public class Nucleus_ORF1P implements PlugIn {
             reader.setId(imageFile.get(0));
             
             // Find channel names
-            List<String> channels = tools.findChannels(imageFile.get(0));
+            String[] channels = tools.findChannels(imageFile.get(0), meta, reader);
             
             // Find image calibration
             tools.cal = tools.findImageCalib(meta);
@@ -103,16 +104,10 @@ public class Nucleus_ORF1P implements PlugIn {
             nucleus_Analyze.flush();
             
             // Channels dialog
-            List<String> chs = new ArrayList();
-            List<String> channelsName = new ArrayList();
-            channelsName.add("Nucleus");
-            channelsName.add("ORF1P");
-            if (channels.size() > 1) {
-                chs = tools.dialog(channels, channelsName);
-                if ( chs == null) {
-                    IJ.showStatus("Plugin cancelled");
-                    return;
-                }
+            String[] chs = tools.dialog(channels);
+            if ( chs == null) {
+                IJ.showStatus("Plugin cancelled");
+                return;
             }
             
             for (String f : imageFile) {
@@ -133,9 +128,9 @@ public class Nucleus_ORF1P implements PlugIn {
 
                        
                 // Find nucleus
-                System.out.println("Opening nucleus channel " + channels.get(0) +" ...");
-                int channel = channels.indexOf(chs.get(0));
-                ImagePlus imgNucleus = BF.openImagePlus(options)[channel];
+                System.out.println("Opening nucleus channel " + chs[0] +" ...");
+                int indexCh = ArrayUtils.indexOf(channels,chs[0]);
+                ImagePlus imgNucleus = BF.openImagePlus(options)[indexCh];
                 
                 //section volume in µm^3
                 double volPix = tools.cal.pixelWidth*tools.cal.pixelHeight*tools.cal.pixelDepth;
@@ -161,9 +156,9 @@ public class Nucleus_ORF1P implements PlugIn {
                 tools.closeImages(imgNucleus);
                 
                 // open OFRP1 Channel
-                System.out.println("Opening ORF1P channel " + channels.get(1)+ " ...");
-                channel = channels.indexOf(chs.get(1));
-                ImagePlus imgORF1P = BF.openImagePlus(options)[channel];
+                System.out.println("Opening ORF1P channel " + chs[1]+ " ...");
+                indexCh = ArrayUtils.indexOf(channels,chs[1]);
+                ImagePlus imgORF1P = BF.openImagePlus(options)[indexCh];
                 
                 // Find background
                 double bgORF1P = tools.find_background(imgORF1P);

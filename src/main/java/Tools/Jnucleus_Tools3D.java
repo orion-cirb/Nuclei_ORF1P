@@ -88,9 +88,12 @@ public class Jnucleus_Tools3D {
     private boolean useGpu = true;
     public String cellModel = "cyto2";
     private String cellPoseEnvDirPath = "/home/phm/.conda/envs/cellpose";    
+    private String[] channelsName = {"DAPI","ORF1P"};
     
     public final ImageIcon icon = new ImageIcon(this.getClass().getResource("/Orion_icon.png"));
  
+    
+    
     /*
     Find starDist models in Fiji models folder
     */
@@ -153,9 +156,8 @@ public class Jnucleus_Tools3D {
      * @return 
      */
     
-    public ArrayList dialog(List<String> channels, List<String> channelsName) {
-        ArrayList ch = new ArrayList();
-        String chNames[] = channels.toArray(new String[channels.size()]);
+    public String[] dialog(String[] channels) {
+        String[] ch = new String[channelsName.length];
         ArrayList<String> models = findStardistModels();
         if (IJ.isWindows())
             cellPoseEnvDirPath = System.getProperty("user.home")+"\\miniconda3\\envs\\CellPose";
@@ -165,7 +167,8 @@ public class Jnucleus_Tools3D {
         gd.addMessage("Choose channels", new Font(Font.MONOSPACED , Font.BOLD, 12), Color.blue);
         int index = 0;
         for (String chName : channelsName) {
-            gd.addChoice(chName, chNames, channels.get(0));
+            gd.addChoice(chName, channels, channels[index]);
+            index++;
         }
         gd.addMessage("Nucleus parameters", new Font(Font.MONOSPACED , Font.BOLD, 12), Color.blue);
         gd.addMessage("StarDist model", Font.getFont("Monospace"), Color.blue);
@@ -185,8 +188,8 @@ public class Jnucleus_Tools3D {
         gd.addNumericField("XY cal. :", cal.pixelWidth);
         gd.addNumericField("Z cal.  :", cal.pixelDepth);
         gd.showDialog();
-        for (int i = 0; i < channelsName.size(); i++)
-            ch.add(i, gd.getNextChoice());
+        for (int i = 0; i < channelsName.length; i++)
+            ch[i] = gd.getNextChoice();
         minNucVol = (float)gd.getNextNumber();
         maxNucVol = (float)gd.getNextNumber();
         outerNucDil = (float)gd.getNextNumber();
@@ -226,42 +229,53 @@ public class Jnucleus_Tools3D {
         return(images);
     }
     
-    /**
+     /**
      * Find channels name
      * @param imageName
-     * @param imageExt
+     * @return 
+     * @throws loci.common.services.DependencyException
+     * @throws loci.common.services.ServiceException
+     * @throws loci.formats.FormatException
+     * @throws java.io.IOException
      */
-    public List<String> findChannels (String imageName) throws DependencyException, ServiceException, FormatException, IOException {
-        List<String> channels = new ArrayList<>();
-        // create OME-XML metadata store of the latest schema version
-        ServiceFactory factory;
-        factory = new ServiceFactory();
-        OMEXMLService service = factory.getInstance(OMEXMLService.class);
-        IMetadata meta = service.createOMEXMLMetadata();
-        ImageProcessorReader reader = new ImageProcessorReader();
-        reader.setMetadataStore(meta);
-        reader.setId(imageName);
+    public String[] findChannels (String imageName, IMetadata meta, ImageProcessorReader reader) throws DependencyException, ServiceException, FormatException, IOException {
         int chs = reader.getSizeC();
+        String[] channels = new String[chs];
         String imageExt =  FilenameUtils.getExtension(imageName);
         switch (imageExt) {
             case "nd" :
-                String channelsID = meta.getImageName(0);
-                channels = Arrays.asList(channelsID.replace("_", "-").split("/"));
-                break;
-            case "lif" :
-                String[] ch = new String[chs];
-                if (chs > 1) {
-                    for (int n = 0; n < chs; n++) 
-                        if (meta.getChannelExcitationWavelength(0, n) == null)
-                            channels.add(Integer.toString(n));
-                        else 
-                            channels.add(meta.getChannelExcitationWavelength(0, n).value().toString());
+                for (int n = 0; n < chs; n++) 
+                {
+                    if (meta.getChannelID(0, n) == null)
+                        channels[n] = Integer.toString(n);
+                    else 
+                        channels[n] = meta.getChannelName(0, n).toString();
                 }
                 break;
+            case "lif" :
+                for (int n = 0; n < chs; n++) 
+                    if (meta.getChannelID(0, n) == null || meta.getChannelName(0, n) == null)
+                        channels[n] = Integer.toString(n);
+                    else 
+                        channels[n] = meta.getChannelName(0, n).toString();
+                break;
+            case "czi" :
+                for (int n = 0; n < chs; n++) 
+                    if (meta.getChannelID(0, n) == null)
+                        channels[n] = Integer.toString(n);
+                    else 
+                        channels[n] = meta.getChannelFluor(0, n).toString();
+                break;
+            case "ics" :
+                for (int n = 0; n < chs; n++) 
+                    if (meta.getChannelID(0, n) == null)
+                        channels[n] = Integer.toString(n);
+                    else 
+                        channels[n] = meta.getChannelExcitationWavelength(0, n).value().toString();
+                break;    
             default :
-                chs = reader.getSizeC();
                 for (int n = 0; n < chs; n++)
-                    channels.add(Integer.toString(n));
+                    channels[n] = Integer.toString(n);
         }
         return(channels);         
     }
@@ -320,48 +334,6 @@ public class Jnucleus_Tools3D {
         }
         cellPop.setVoxelSizeXY(cal.pixelWidth);
         cellPop.setVoxelSizeZ(cal.pixelDepth);
-        return(cellPop);
-    }
-    
-    
-    
-    /*
-    Find cell cytoplasm
-    */
-    public Objects3DIntPopulation findCells (ImagePlus img, Objects3DIntPopulation nucPop) {
-        Objects3DIntPopulation cellPop = new Objects3DIntPopulation();
-        ImagePlus imgCell = new Duplicator().run(img);
-        CellOutliner cell = new CellOutliner();
-        cell.cellRadius = 80;
-        cell.darkEdge = false;
-        cell.dilate = 8;
-        cell.ellipticalFit = false;
-        cell.iterations = 4;
-        cell.kernelSmoothing = 1.2;
-        cell.kernelWidth = 7;
-        cell.polygonSmoothing = 1;
-        cell.tolerance = 5;
-        cell.weightingGamma = 2.5;
-        cell.processAllSlices = true;
-        cell.buildMaskOutput = true;
-        for (Object3DInt nucObj : nucPop.getObjects3DInt()) {
-            Point3D pt = new MeasureCentroid(nucObj).getCentroidAsPoint();
-            imgCell.setSlice(pt.getRoundZ());
-            PointRoi roi = new PointRoi(pt.getRoundX(), pt.getRoundY());
-            imgCell.setRoi(roi, true);
-            cell.setup("", imgCell);
-            cell.run(imgCell.getProcessor());
-            ImagePlus imgMask = cell.maskImp;
-            imgMask.setCalibration(cal);
-            nucObj.drawObject(ImageHandler.wrap(imgMask), 0);
-            // get the cell cytoplasm
-            Object3DInt cellCyto = getPopFromImage(imgMask).getFirstObject();
-            cellCyto.setLabel(nucObj.getLabel());
-            closeImages(imgMask);
-            cellPop.addObject(cellCyto);
-        }
-        closeImages(imgCell);
-        System.out.println(cellPop.getNbObjects()+" cells found");
         return(cellPop);
     }
     
