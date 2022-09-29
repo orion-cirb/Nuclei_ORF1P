@@ -127,7 +127,7 @@ public class Nucleus_ORF1P implements PlugIn {
                 Objects3DIntPopulation nucPop = tools.cellposeDetection(imgNucleus, true, "cyto2", 1, 100, 0.5, 
                         false, tools.minNucVol, tools.maxNucVol);
                 System.out.println(nucPop.getNbObjects() + " " + channels[0] + " nuclei found");
-                tools.drawPop(imgNucleus, nucPop, outDirResults, "NUCLEI");
+                //tools.drawPop(imgNucleus, nucPop, outDirResults, "nuclei");
 
                 // Find nucleus outer ring
                 System.out.println("Finding outer ring ....");
@@ -152,7 +152,7 @@ public class Nucleus_ORF1P implements PlugIn {
                         true, tools.minCellVol, tools.maxCellVol);
                 cellPop = tools.colocalization(cellPop, nucPop);
                 System.out.println(cellPop.getNbObjects() + " " + channels[1] + " cells found with a nucleus");
-                tools.drawPop(imgORF1P, cellPop, outDirResults, "CELLS");
+                //tools.drawPop(imgORF1P, cellPop, outDirResults, "cells");
                 
                 // Find dots
                 Objects3DIntPopulation allDotsPop = new Objects3DIntPopulation();

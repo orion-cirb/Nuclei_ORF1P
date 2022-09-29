@@ -325,9 +325,8 @@ public class Jnucleus_Tools3D {
         ImagePlus imgOut = cellpose.run();
         if(resize) imgOut = imgOut.resize(img.getWidth(), img.getHeight(), "none");
         imgOut.setCalibration(cal);
-        
-        imgOut.show();
-        new WaitForUserDialog("test").show();
+        //imgOut.show();
+        //new WaitForUserDialog("test").show();
        
         // Get cells as a population of objects
         ImageHandler imgH = ImageHandler.wrap(imgOut);
@@ -419,9 +418,8 @@ public class Jnucleus_Tools3D {
         ImagePlus imgLabels = (resize) ? star.associateLabels().resize(img.getWidth(), img.getHeight(), 1, "none") : star.associateLabels();
         ImageInt label3D = ImageInt.wrap(imgLabels);
         label3D.setCalibration(cal);
-        
-        label3D.show();
-        new WaitForUserDialog("test").show();
+        //label3D.show();
+        //new WaitForUserDialog("test").show();
         
         Objects3DIntPopulation objPop = new Objects3DIntPopulationComputation(new Objects3DIntPopulation(label3D)).getFilterSize(minVol/pixVol, maxVol/pixVol);
         objPop.resetLabels();
