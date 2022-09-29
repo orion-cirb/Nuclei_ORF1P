@@ -11,7 +11,7 @@
         <packaging>jar</packaging>
 	<name>plugins/Julia_Nucleus_Analysis</name>
 	<description>
-            OFR1P nucleus and cells intensity
+            Intensity in nucleus and cytoplasm of ORF1P cells
         </description>
 
 	<developers>
@@ -29,16 +29,16 @@
 	</developers>
 
         <scm>
-            <connection>scm:git:git://github.com/imagej/Nucleus_Quantifs.jar</connection>
-            <developerConnection>scm:git:git@github.com:imagej/Nucleus_Quantifs.jar</developerConnection>
+            <connection>scm:git:git://github.com/imagej/Julia_Nucleus_Analysis.jar</connection>
+            <developerConnection>scm:git:git@github.com:imagej/Julia_Nucleus_Analysis.jar</developerConnection>
             <tag>HEAD</tag>
-            <url>https://github.com/orion-cirb/Nucleus_Quantifs.jar</url>
+            <url>https://github.com/orion-cirb/Julia_Nucleus_Analysis.jar</url>
 	</scm>
         
 	<properties>
                 <imagej.app.directory>/opt/Fiji.app/</imagej.app.directory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<main-class>Nucleus_Quantifs.jar</main-class>
+		<main-class>Julia_Nucleus_Analysis.jar</main-class>
 	</properties>
 
 	<dependencies>

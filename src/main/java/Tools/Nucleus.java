@@ -1,12 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package Tools;
 
 /**
- *
  * @author phm
  */
 public class Nucleus {
@@ -77,9 +71,12 @@ public class Nucleus {
 
   
 	
-	public Nucleus(int index, double nucVol, double nucComp, double nucSph, double nucEllElong, double nucEllFlat, double nucInt, int nucDots, double nucDotsVol, double nucDotsInt, double innerNucVol, double innerNucInt, int innerNucDots, double innerNucDotsVol,
-                    double innerNucDotsInt, double innerRingVol, double innerRingInt, int innerRingDots, double innerRingDotsVol, double innerRingDotsInt, double outerRingVol, double outerRingInt,
-                    int outerRingDots, double outerRingDotsVol, double outerRingDotsInt, double cytoVol, double cytoInt, int cytoDots, double cytoDotsVol, double cytoDotsInt) {
+	public Nucleus(int index, double nucVol, double nucComp, double nucSph, double nucEllElong, double nucEllFlat, double nucInt, 
+                int nucDots, double nucDotsVol, double nucDotsInt, double innerNucVol, double innerNucInt, int innerNucDots, 
+                double innerNucDotsVol, double innerNucDotsInt, double innerRingVol, double innerRingInt, int innerRingDots, 
+                double innerRingDotsVol, double innerRingDotsInt, double outerRingVol, double outerRingInt, int outerRingDots, 
+                double outerRingDotsVol, double outerRingDotsInt, double cytoVol, double cytoInt, int cytoDots, double cytoDotsVol, 
+                double cytoDotsInt) {
             this.index = index;
             this.nucVol = nucVol;
             this.nucComp = nucComp;
