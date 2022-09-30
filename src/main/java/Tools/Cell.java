@@ -1,11 +1,41 @@
 package Tools;
 
+import java.util.HashMap;
+import mcib3d.geom2.Object3DInt;
+
 /**
- * @author phm
+ * @author hm
  */
-public class Nucleus {
+public class Cell {
     
-    // Nucleus index
+    public Object3DInt cell;
+    public Object3DInt nucleus;
+    public Object3DInt cytoplasm;
+    public Object3DInt innerRing;
+    public Object3DInt outerRing;
+    public Object3DInt innerNucleus;
+    public HashMap<String, Double> parameters;
+    
+    public Cell(Object3DInt cell, Object3DInt nucleus, Object3DInt cytoplasm) {
+        this.cell = cell;
+        this.nucleus = nucleus;
+        this.cytoplasm = cytoplasm;
+        this.parameters = new HashMap<>();
+    }
+    
+    public void setInnerRing(Object3DInt innerRing) {
+        this.innerRing = innerRing;
+    }
+    
+    public void setOuterRing(Object3DInt outerRing) {
+        this.outerRing = outerRing;
+    }
+    
+    public void setInnerNucleus(Object3DInt innerNucleus) {
+        this.innerNucleus = innerNucleus;
+    }
+    
+    /*// Nucleus index
     private int index;
     // Nucleus volume
     private double nucVol;
@@ -71,7 +101,7 @@ public class Nucleus {
 
   
 	
-	public Nucleus(int index, double nucVol, double nucComp, double nucSph, double nucEllElong, double nucEllFlat, double nucInt, 
+	public Cell(int index, double nucVol, double nucComp, double nucSph, double nucEllElong, double nucEllFlat, double nucInt, 
                 int nucDots, double nucDotsVol, double nucDotsInt, double innerNucVol, double innerNucInt, int innerNucDots, 
                 double innerNucDotsVol, double innerNucDotsInt, double innerRingVol, double innerRingInt, int innerRingDots, 
                 double innerRingDotsVol, double innerRingDotsInt, double outerRingVol, double outerRingInt, int outerRingDots, 
@@ -347,5 +377,5 @@ public class Nucleus {
         
         public double getCytoDotsInt() {
             return cytoDotsInt;
-        }
+        }*/
 }

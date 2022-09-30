@@ -1,7 +1,7 @@
 package Julia_Nucleus_Analysis;
 
 import Tools.Jnucleus_Tools3D;
-import Tools.Nucleus;
+import Tools.Cell;
 import ij.IJ;
 import ij.ImagePlus;
 import java.io.BufferedWriter;
@@ -128,16 +128,6 @@ public class Nucleus_ORF1P implements PlugIn {
                         false, tools.minNucVol, tools.maxNucVol);
                 System.out.println(nucPop.getNbObjects() + " " + channels[0] + " nuclei found");
                 //tools.drawPop(imgNucleus, nucPop, outDirResults, "nuclei");
-
-                // Find nucleus outer ring
-                System.out.println("Finding outer ring ....");
-                Objects3DIntPopulation outerRingPop = tools.createDonutPop(nucPop, imgNucleus, tools.outerNucDil, true);
-                // Find nucleus inner ring
-                System.out.println("Finding inner ring ....");
-                Objects3DIntPopulation innerRingPop = tools.createDonutPop(nucPop, imgNucleus, tools.innerNucDil, false);
-                // Find inner nucleus
-                System.out.println("Finding inner nucleus ....");
-                Objects3DIntPopulation innerNucPop = tools.getInnerNucleus(nucPop, imgNucleus);
                 
                 // Open ORF1P channel
                 tools.print("- Analyzing " + channels[1] + " channel -");
@@ -150,9 +140,20 @@ public class Nucleus_ORF1P implements PlugIn {
                 // Find cells cytoplasm
                 Objects3DIntPopulation cellPop = tools.cellposeDetection(imgORF1P, true, "cyto2", 1, 100, 0.5, 
                         true, tools.minCellVol, tools.maxCellVol);
-                cellPop = tools.colocalization(cellPop, nucPop);
-                System.out.println(cellPop.getNbObjects() + " " + channels[1] + " cells found with a nucleus");
+                System.out.println(cellPop.getNbObjects() + " " + channels[1] + " cells found");
                 //tools.drawPop(imgORF1P, cellPop, outDirResults, "cells");
+                 
+                // Colocalization
+                ArrayList<Cell> colocPop = tools.colocalization(cellPop, nucPop);
+                System.out.println(colocPop.size() + " " + channels[1] + " cells colocalized with " + channels[0] + " nuclei");
+                tools.resetLabels(colocPop);
+                
+                // Find nuclei outer ring
+                System.out.println("Finding outer ring ....");
+                tools.setNucleiRing(colocPop, tools.outerNucDil, true);
+                // Find nuclei inner ring
+                System.out.println("Finding inner ring ....");
+                tools.setNucleiRing(colocPop, tools.innerNucDil, false);
                 
                 // Find dots
                 Objects3DIntPopulation allDotsPop = new Objects3DIntPopulation();
@@ -166,10 +167,10 @@ public class Nucleus_ORF1P implements PlugIn {
                 
                 // Tag nuclei with parameters
                 tools.print("- Measuring cells parameters -");
-                ArrayList<Nucleus> nuclei = tools.tagNuclei(imgORF1P, nucPop, innerNucPop, innerRingPop, outerRingPop, cellPop, allDotsPop);
+                tools.tagCells(imgORF1P, colocPop, allDotsPop);
                 
                 // Save image objects
-                tools.print("- Saving results -");
+                /*tools.print("- Saving results -");
                 tools.saveImageObjects(null, cellPop, nucPop, imgORF1P, outDirResults+rootName+"_CellsCytoplasmObjects.tif", 2, 40);
                 tools.saveImageObjects(null, outerRingPop, nucPop, imgORF1P, outDirResults+rootName+"_OuterRingObjects.tif", 0, 40);
                 tools.saveImageObjects(innerNucPop, innerRingPop, null, imgORF1P, outDirResults+rootName+"_innerRingObjects.tif", 0, 40);
@@ -177,7 +178,7 @@ public class Nucleus_ORF1P implements PlugIn {
                     tools.saveImageObjects(allDotsPop, cellPop, nucPop, imgORF1P, outDirResults+rootName+"_dotsObjects.tif", 3, 40);
                              
                 // Write results
-                for (Nucleus nuc : nuclei) {
+                for (Cell nuc : nuclei) {
                     results.write(rootName+"\t"+nuc.getIndex()+"\t"+nuc.getNucVol()+"\t"+nuc.getNucComp()+"\t"+nuc.getNucSph()+"\t"+nuc.getNucEllElong()+"\t"+
                         nuc.getNucEllFlat()+"\t"+nuc.getNucInt()+"\t"+(nuc.getNucInt() - bgORF1P*nuc.getNucVol()) +"\t"+nuc.getNucDots()+"\t"+nuc.getNucDotsVol()+"\t"+
                         nuc.getNucDotsInt()+"\t"+(nuc.getNucDotsInt()- bgORF1P*nuc.getNucDotsVol())+"\t"+nuc.getInnerNucVol()+"\t"+nuc.getInnerNucInt()+"\t"+(nuc.getInnerNucInt() - bgORF1P * nuc.getInnerNucVol())+"\t"+
@@ -187,7 +188,7 @@ public class Nucleus_ORF1P implements PlugIn {
                         nuc.getOuterRingDotsVol()+"\t"+nuc.getOuterRingDotsInt()+"\t"+(nuc.getOuterRingDotsInt() - bgORF1P*nuc.getOuterRingDotsVol())+"\t"+nuc.getCytoVol()+"\t"+nuc.getCytoInt()+"\t"+
                         (nuc.getCytoInt() - bgORF1P * nuc.getCytoVol())+"\t"+nuc.getCytoDots()+"\t"+nuc.getCytoDotsVol()+"\t"+nuc.getCytoDotsInt()+"\t"+(nuc.getCytoDotsInt()-bgORF1P*nuc.getCytoDotsVol())+"\n");
                     results.flush();
-                }
+                }*/
                 
                 tools.flush_close(imgNucleus);
                 tools.flush_close(imgORF1P);

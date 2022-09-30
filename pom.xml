@@ -36,7 +36,7 @@
 	</scm>
         
 	<properties>
-                <imagej.app.directory>/opt/Fiji.app/</imagej.app.directory>
+                <imagej.app.directory>/Program Files/Fiji.app/</imagej.app.directory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main-class>Julia_Nucleus_Analysis.jar</main-class>
 	</properties>
