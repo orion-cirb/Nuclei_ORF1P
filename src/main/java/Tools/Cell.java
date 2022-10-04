@@ -14,13 +14,13 @@ public class Cell {
     public Object3DInt innerRing;
     public Object3DInt outerRing;
     public Object3DInt innerNucleus;
-    public HashMap<String, Double> parameters;
+    public HashMap<String, Double> params;
     
     public Cell(Object3DInt cell, Object3DInt nucleus, Object3DInt cytoplasm) {
         this.cell = cell;
         this.nucleus = nucleus;
         this.cytoplasm = cytoplasm;
-        this.parameters = new HashMap<>();
+        this.params = new HashMap<>();
     }
     
     public void setInnerRing(Object3DInt innerRing) {
@@ -35,347 +35,51 @@ public class Cell {
         this.innerNucleus = innerNucleus;
     }
     
-    /*// Nucleus index
-    private int index;
-    // Nucleus volume
-    private double nucVol;
-    // Nucleus intensity
-    private double nucInt;
-    // Nucleus dots number
-    private int nucDots;
-    // Nucleus dots volume
-    private double nucDotsVol;
-    // Nucleus dots intensity
-    private double nucDotsInt;
-    // nucleus compactness
-    private double nucComp;
-    // nucleus sphericity
-    private double nucSph;
-    // nucleus elongation Ellipse
-    private double nucEllElong;
-    // nucleus flatness Ellipse
-    private double nucEllFlat;
-    // Inner nucleus volume
-    private double innerNucVol;
-    // Inner nucleus intensity
-    private double innerNucInt;
-    // Inner nucleus dots number
-    private int innerNucDots;
-    // Inner nucleus dots volume
-    private double innerNucDotsVol;
-    // Inner nucleus dots intensity
-    private double innerNucDotsInt;
-    
-    // Inner nucleus ring volume
-    private double innerRingVol;
-    // Inner nucleus intensity
-    private double innerRingInt;
-    // Inner nucleus dots number
-    private int innerRingDots;
-    // Inner nucleus dots volume
-    private double innerRingDotsVol;
-    // Inner nucleus dots intensity
-    private double innerRingDotsInt;
-    
-    // Outer nucleus ring volume
-    private double outerRingVol;
-    // Inner nucleus intensity
-    private double outerRingInt;
-    // Inner nucleus dots number
-    private int outerRingDots;
-    // Inner nucleus dots volume
-    private double outerRingDotsVol;
-    // Inner nucleus dots intensity
-    private double outerRingDotsInt;
-    
-    // Cell cytoplasm
-    private double cytoVol;
-    // Inner nucleus intensity
-    private double cytoInt;
-    // Inner nucleus dots number
-    private int cytoDots;
-    // Inner nucleus dots volume
-    private double cytoDotsVol;
-    // Inner nucleus dots intensity
-    private double cytoDotsInt;
-
-  
-	
-	public Cell(int index, double nucVol, double nucComp, double nucSph, double nucEllElong, double nucEllFlat, double nucInt, 
-                int nucDots, double nucDotsVol, double nucDotsInt, double innerNucVol, double innerNucInt, int innerNucDots, 
-                double innerNucDotsVol, double innerNucDotsInt, double innerRingVol, double innerRingInt, int innerRingDots, 
-                double innerRingDotsVol, double innerRingDotsInt, double outerRingVol, double outerRingInt, int outerRingDots, 
-                double outerRingDotsVol, double outerRingDotsInt, double cytoVol, double cytoInt, int cytoDots, double cytoDotsVol, 
+    public void setParams(double index, double nucVol, double nucComp, double nucSph, double nucEllElong, double nucEllFlat, double nucInt, 
+                double nucDots, double nucDotsVol, double nucDotsInt, double innerNucVol, double innerNucInt, double innerNucDots, 
+                double innerNucDotsVol, double innerNucDotsInt, double innerRingVol, double innerRingInt, double innerRingDots, 
+                double innerRingDotsVol, double innerRingDotsInt, double outerRingVol, double outerRingInt, double outerRingDots, 
+                double outerRingDotsVol, double outerRingDotsInt, double cytoVol, double cytoInt, double cytoDots, double cytoDotsVol, 
                 double cytoDotsInt) {
-            this.index = index;
-            this.nucVol = nucVol;
-            this.nucComp = nucComp;
-            this.nucSph = nucSph;
-            this.nucEllElong = nucEllElong; 
-            this.nucEllFlat = nucEllFlat; 
-            this.nucInt = nucInt;
-            this.nucDots = nucDots;
-            this.nucDotsVol = nucDotsVol;
-            this.nucDotsInt = nucDotsInt;
-            this.innerNucVol = innerNucVol;
-            this.innerNucInt = innerNucInt;
-            this.innerNucDots = innerNucDots;
-            this.innerNucDotsVol = innerNucDotsVol;
-            this.innerNucDotsInt = innerNucDotsInt;
-            this.innerRingVol = innerRingVol;
-            this.innerRingInt = innerRingInt;
-            this.innerRingDots = innerRingDots;
-            this.innerRingDotsVol = innerRingDotsVol;
-            this.innerRingDotsInt = innerRingDotsInt;
-            this.outerRingVol = outerRingVol;
-            this.outerRingInt = outerRingInt;
-            this.outerRingDots = outerRingDots;
-            this.outerRingDotsVol = outerRingDotsVol;
-            this.outerRingDotsInt = outerRingDotsInt;
-            this.cytoVol = cytoVol;
-            this.cytoInt = cytoInt;
-            this.cytoDots = cytoDots;
-            this.cytoDotsVol = cytoDotsVol;
-            this.cytoDotsInt = cytoDotsInt;
-	}
+        params.put("index", index);
         
-        public void setIndex(int index) {
-            this.index = index;
-	}
+        // Nucleus
+        params.put("nucVol", nucVol);
+        params.put("nucComp", nucComp);
+        params.put("nucSph", nucSph);
+        params.put("nucEllElong", nucEllElong);
+        params.put("nucEllFlat", nucEllFlat);
+        params.put("nucInt", nucInt);
+        params.put("nucDots", nucDots);
+        params.put("nucDotsVol", nucDotsVol);
+        params.put("nucDotsInt", nucDotsInt);
         
-        public void setNucVol(double nucVol) {
-            this.nucVol = nucVol;
-	}
+        // Inner nucleus
+        params.put("innerNucVol", innerNucVol);
+        params.put("innerNucInt", innerNucInt);
+        params.put("innerNucDots", innerNucDots);
+        params.put("innerNucDotsVol", innerNucDotsVol);
+        params.put("innerNucDotsInt", innerNucDotsInt);
         
-        public void setNucComp(double nucComp) {
-            this.nucComp = nucComp;
-	}
+        // Inner ring
+        params.put("innerRingVol", innerRingVol);
+        params.put("innerRingInt", innerRingInt);
+        params.put("innerRingDots", innerRingDots);
+        params.put("innerRingDotsVol", innerRingDotsVol);
+        params.put("innerRingDotsInt", innerRingDotsInt);
         
-        public void setNucSph(double nucSph) {
-            this.nucSph = nucSph;
-	}
+        // Outer ring
+        params.put("outerRingVol", outerRingVol);
+        params.put("outerRingInt", outerRingInt);
+        params.put("outerRingDots", outerRingDots);
+        params.put("outerRingDotsVol", outerRingDotsVol);
+        params.put("outerRingDotsInt", outerRingDotsInt);
         
-        public void setNucEllElong(double nucEllElong) {
-            this.nucEllElong = nucEllElong;
-	}
-        
-        public void setNucnucEllFlat(double nucEllFlat) {
-            this.nucEllFlat = nucEllFlat;
-	}
-        
-        public void setNucInt(double nucInt) {
-            this.nucInt = nucInt;
-	}
-        
-        public void setNucDots(int nucDots) {
-            this.nucDots = nucDots;
-	}
-        
-        public void setNucDotsVol(double nucDotsVol) {
-            this.nucDotsVol = nucDotsVol;
-        }
-        
-        public void setNucDotsInt(double nucDotsInt) {
-            this.nucDotsInt = nucDotsInt;
-        }
-        
-        public void setInnerNucVol(double innerNucVol) {
-            this.innerNucVol = innerNucVol;
-	}
-        
-        public void setInnerNucInt(double innerNucInt) {
-            this.innerNucInt = innerNucInt;
-	}
-        
-        public void setInnerNucDots(int innerNucDots) {
-            this.innerNucDots = innerNucDots;
-	}
-        
-        public void setInnerNucDotsVol(double innerNucDotsVol) {
-            this.innerNucDotsVol = innerNucDotsVol;
-        }
-        
-        public void setInnerNucDotsInt(double innerNucDotsInt) {
-            this.innerNucDotsInt = innerNucDotsInt;
-        }
-        
-        public void setInnerRingVol(double innerRingVol) {
-            this.innerRingVol = innerRingVol;
-	}
-        
-        public void setInnerRingInt(double innerRingInt) {
-            this.innerRingInt = innerRingInt;
-	}
-        
-        public void setInnerRingDots(int innerRingDots) {
-            this.innerRingDots = innerRingDots;
-	}
-        
-        public void setInnerRingDotsVol(double innerRingDotsVol) {
-            this.innerRingDotsVol = innerRingDotsVol;
-        }
-        
-        public void setInnerRingDotsInt(double innerRingDotsInt) {
-            this.innerRingDotsInt = innerRingDotsInt;
-        }
-        
-        public void setOuterRingVol(double outerRingVol) {
-            this.outerRingVol = outerRingVol;
-	}
-        
-        public void setOuterRingInt(double outerRingInt) {
-            this.outerRingInt = outerRingInt;
-	}
-        
-        public void setOuterRingDots(int outerRingDots) {
-            this.outerRingDots = outerRingDots;
-	}
-        
-        public void setOuterRingDotsVol(double outerRingDotsVol) {
-            this.outerRingDotsVol = outerRingDotsVol;
-        }
-        
-        public void setOuterRingDotsInt(double outerRingDotsInt) {
-            this.outerRingDotsInt = outerRingDotsInt;
-        }
-        
-        public void setCytoVol(double cytoVol) {
-            this.cytoVol = cytoVol;
-	}
-        
-        public void setCytoInt(double cytoInt) {
-            this.cytoInt = cytoInt;
-	}
-        
-        public void setCytoDots(int cytoDots) {
-            this.cytoDots = cytoDots;
-	}
-        
-        public void setCytoDotsVol(double cytoDotsVol) {
-            this.cytoDotsVol = cytoDotsVol;
-        }
-        
-        public void setCytoDotsInt(double cytoDotsInt) {
-            this.cytoDotsInt = cytoDotsInt;
-        }
-        
-        public int getIndex() {
-            return index;
-        }
-        
-        public double getNucVol() {
-            return nucVol;
-        }
-                
-        public double getNucComp() {
-            return nucComp;
-        }
-                
-        public double getNucSph() {
-            return nucSph;
-        }
-                
-        public double getNucEllElong() {
-            return nucEllElong;
-        }
-                
-        public double getNucEllFlat() {
-            return nucEllFlat;
-        }
-        
-         public double getNucInt() {
-            return nucInt;
-	}
-        
-        public int getNucDots() {
-            return nucDots;
-	}
-        
-        public double getNucDotsVol() {
-            return nucDotsVol;
-        }
-        
-        public double getNucDotsInt() {
-            return nucDotsInt;
-        }
-        
-        public double getInnerNucVol() {
-            return innerNucVol;
-        }
-                
-        public double getInnerNucInt() {
-            return innerNucInt;
-	}
-        
-        public int getInnerNucDots() {
-            return innerNucDots;
-	}
-        
-        public double getInnerNucDotsVol() {
-            return innerNucDotsVol;
-        }
-        
-        public double getInnerNucDotsInt() {
-            return innerNucDotsInt;
-        }
-        
-        public double getInnerRingVol() {
-            return innerRingVol;
-        }
-                
-        public double getInnerRingInt() {
-            return innerRingInt;
-	}
-        
-        public int getInnerRingDots() {
-            return innerRingDots;
-	}
-        
-        public double getInnerRingDotsVol() {
-            return innerRingDotsVol;
-        }
-        
-        public double getInnerRingDotsInt() {
-            return innerRingDotsInt;
-        }
-        
-        public double getOuterRingVol() {
-            return outerRingVol;
-        }
-                
-        public double getOuterRingInt() {
-            return outerRingInt;
-	}
-        
-        public int getOuterRingDots() {
-            return outerRingDots;
-	}
-        
-        public double getOuterRingDotsVol() {
-            return outerRingDotsVol;
-        }
-        
-        public double getOuterRingDotsInt() {
-            return outerRingDotsInt;
-        }
-        
-        public double getCytoVol() {
-            return cytoVol;
-        }
-                
-        public double getCytoInt() {
-            return cytoInt;
-	}
-        
-        public int getCytoDots() {
-            return cytoDots;
-	}
-        
-        public double getCytoDotsVol() {
-            return cytoDotsVol;
-        }
-        
-        public double getCytoDotsInt() {
-            return cytoDotsInt;
-        }*/
+        // Cytoplasm
+        params.put("cytoVol", cytoVol);
+        params.put("cytoInt", cytoInt);
+        params.put("cytoDots", cytoDots);
+        params.put("cytoDotsVol", cytoDotsVol);
+        params.put("cytoDotsInt", cytoDotsInt);        
+    }
 }
