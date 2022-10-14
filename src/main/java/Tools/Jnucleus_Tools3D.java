@@ -423,10 +423,7 @@ public class Jnucleus_Tools3D {
         ImagePlus imgLabels = (resize) ? star.associateLabels().resize(img.getWidth(), img.getHeight(), 1, "none") : star.associateLabels();
         ImageInt label3D = ImageInt.wrap(imgLabels);
         label3D.setCalibration(cal);
-        flush_close(imgLabels);
-        //label3D.show();
-        //new WaitForUserDialog("test").show();
-        
+        flush_close(imgLabels);        
         Objects3DIntPopulation pop = new Objects3DIntPopulation(label3D);
         System.out.println(pop.getNbObjects() + " StarDist detections");
         Objects3DIntPopulation popFilter = new Objects3DIntPopulationComputation(pop).getFilterSize(minVol/pixVol, maxVol/pixVol);
@@ -487,14 +484,12 @@ public class Jnucleus_Tools3D {
      * @param img
      */
     public double findBackground(ImagePlus img) {
-      double[] bg = new double[2];
       ImagePlus imgProj = doZProjection(img, ZProjector.MIN_METHOD);
       ImageProcessor imp = imgProj.getProcessor();
-      bg[0] = imp.getStatistics().mean;
-      bg[1] = imp.getStatistics().stdDev;
-      System.out.println("Background = " + bg[0] + " +- " + bg[1]);
+      double bg = imp.getStatistics().median;
+      System.out.println("Background = " + bg);
       flush_close(imgProj);
-      return(bg[0]+bg[1]);
+      return(bg);
     }
    
     
