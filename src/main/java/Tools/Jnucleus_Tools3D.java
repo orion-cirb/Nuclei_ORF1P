@@ -487,7 +487,7 @@ public class Jnucleus_Tools3D {
       ImagePlus imgProj = doZProjection(img, ZProjector.MIN_METHOD);
       ImageProcessor imp = imgProj.getProcessor();
       double bg = imp.getStatistics().median;
-      System.out.println("Background = " + bg);
+      System.out.println("Background (median intensity of the min projection) = " + bg);
       flush_close(imgProj);
       return(bg);
     }

@@ -47,7 +47,6 @@ public class StarDist2D extends StarDist2DBase implements Command {
     private double probThresh = 0.55;
     private double nmsThresh = 0.4;
     private String outputType = "ROI Manager";
-    // ---------
 
     private File modelFile;
    
@@ -64,8 +63,8 @@ public class StarDist2D extends StarDist2DBase implements Command {
     private double minColoc = 0.1;     
     private double maxBB = 0;
     private int costChoice = 0 ;
+    private float maxLabel = 0; // for association labels
     
-    private float max = 0; // for association labels
     
     public StarDist2D(Object obj, File tmpModelFile) {
          ij = new ImageJ();
@@ -278,17 +277,17 @@ public class StarDist2D extends StarDist2DBase implements Command {
     
     public ImagePlus associateLabels() {
         ImagePlus labImg = getLabelImagePlus();
-        // put the image back in slices
-        if ( labImg.getNChannels()>1) labImg.setDimensions(1, labImg.getNChannels(), 1);
-        if ( labImg.getNFrames()>1) labImg.setDimensions(1, labImg.getNFrames(), 1);
-        // do association
+        // Put the image back in slices
+        if (labImg.getNChannels()>1) labImg.setDimensions(1, labImg.getNChannels(), 1);
+        if (labImg.getNFrames()>1) labImg.setDimensions(1, labImg.getNFrames(), 1);
+        // Do association
         ImagePlus[] associated = new ImagePlus[labImg.getNSlices()];
         associated[0] = labImg.crop(1+"-"+1);
-        max = 0;
+        maxLabel = 0;
         IJ.run(labImg, "Select None", ""); 
         for (int i=1; i<labImg.getNSlices(); i++) {
              ImagePlus inext = labImg.crop((i+1)+"-"+(i+1));
-             associated[i] = associate(inext, associated[i-1], max);
+             associated[i] = associate(inext, associated[i-1]);
              inext.flush();
              inext.close();
         }
@@ -296,20 +295,19 @@ public class StarDist2D extends StarDist2DBase implements Command {
         hyperRes.setDimensions(1, hyperRes.getNFrames(), 1);
         labImg.changes = false;
         labImg.close();
-        //hyperRes.show();
-        //new WaitForUserDialog("asso").show();
         return hyperRes;
     }
     
     /** Associate the label of frame t-1 with slice z */
-    public ImagePlus associate(ImagePlus ip, ImagePlus ref, float max) {
-        
+    public ImagePlus associate(ImagePlus ip, ImagePlus ref) {
         ImageHandler img1 = ImageInt.wrap(ref);
         ImageHandler img2 = ImageInt.wrap(ip);
+        
         TrackingAssociation association = new TrackingAssociation(img1, img2, maxBB, minColoc);
-        association.setMaxLabel(max);
+        association.setMaxLabel(maxLabel);
         ImageHandler trackedImage = association.getTrackedImage();
-        max = association.getMaxLabel();
+        maxLabel = association.getMaxLabel();
+        
         return trackedImage.getImagePlus();
     }
     
