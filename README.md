@@ -18,7 +18,7 @@
 * Detect DAPI nuclei and ORF1p cells with Cellpose
 * Keep ORF1p cells with a nucleus only
 * Detect ORF1p dots with Stardist
-* Give various measures in the nucleus, inner nucleus, inner ring, outer ring and cytoplasm
+* Give various measurements in the nucleus, inner nucleus, inner ring, outer ring and cytoplasm
 
 ### Dependencies
 
