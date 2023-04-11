@@ -69,7 +69,7 @@ public class Jnucleus_Tools3D {
     public final double stardistPercentileTop = 99.8;
     public final double stardistProbThreshNuc = 0.5;
     public final double stardistOverlayThreshNuc = 0.0;
-    public final double stardistProbThreshDots = 0.2;
+    public double stardistProbThreshDots = 0.2;
     public final double stardistOverlayThreshDots = 0.25;
     public String stardistOutput = "Label Image"; 
     
@@ -236,6 +236,7 @@ public class Jnucleus_Tools3D {
         
         gd.addMessage("Dots detection", Font.getFont("Monospace"), Color.blue);
         gd.addCheckbox("Detect dots", dotsDetect);
+        gd.addNumericField("Stardist probability threshold (decrease = more dots): ", stardistProbThreshDots);
         gd.addNumericField("Min dot volume (µm3):", minDotVol);
         gd.addNumericField("Max dot volume (µm3):", maxDotVol);  
         
@@ -258,6 +259,7 @@ public class Jnucleus_Tools3D {
         minCellVol= (float) gd.getNextNumber();
         maxCellVol = (float) gd.getNextNumber();
         dotsDetect = gd.getNextBoolean();
+        stardistProbThreshDots = gd.getNextNumber();
         minDotVol= (float) gd.getNextNumber();
         maxDotVol = (float) gd.getNextNumber();
         cal.pixelWidth = gd.getNextNumber();
