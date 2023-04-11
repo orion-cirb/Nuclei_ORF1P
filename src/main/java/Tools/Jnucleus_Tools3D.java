@@ -6,16 +6,11 @@ import StardistOrion.StarDist2D;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
-import ij.Prefs;
-import ij.gui.PointRoi;
-import ij.gui.WaitForUserDialog;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
 import ij.plugin.Duplicator;
 import ij.plugin.RGBStackMerge;
 import ij.plugin.ZProjector;
-import ij.plugin.filter.RankFilters;
 import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Font;
@@ -23,24 +18,18 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import javax.swing.ImageIcon;
 import loci.common.services.DependencyException;
 import loci.common.services.ServiceException;
-import loci.common.services.ServiceFactory;
 import loci.formats.FormatException;
 import loci.formats.meta.IMetadata;
-import loci.formats.services.OMEXMLService;
 import loci.plugins.util.ImageProcessorReader;
-import mcib3d.geom.Point3D;
 import mcib3d.geom2.BoundingBox;
 import mcib3d.geom2.Object3DComputation;
 import mcib3d.geom2.Object3DInt;
 import mcib3d.geom2.Objects3DIntPopulation;
 import mcib3d.geom2.Objects3DIntPopulationComputation;
-import mcib3d.geom2.measurements.MeasureCentroid;
 import mcib3d.geom2.measurements.MeasureCompactness;
 import mcib3d.geom2.measurements.MeasureEllipsoid;
 import mcib3d.geom2.measurements.MeasureIntensity;
@@ -48,7 +37,6 @@ import mcib3d.geom2.measurements.MeasureVolume;
 import mcib3d.geom2.measurementsPopulation.MeasurePopulationColocalisation;
 import mcib3d.image3d.ImageHandler;
 import mcib3d.image3d.ImageInt;
-import mcib3d.image3d.ImageLabeller;
 import org.apache.commons.io.FilenameUtils;
 import org.scijava.util.ArrayUtils;
 
@@ -81,14 +69,14 @@ public class Jnucleus_Tools3D {
     public final double stardistPercentileTop = 99.8;
     public final double stardistProbThreshNuc = 0.5;
     public final double stardistOverlayThreshNuc = 0.0;
-    public final double stardistProbThreshDots = 0.02;
+    public final double stardistProbThreshDots = 0.2;
     public final double stardistOverlayThreshDots = 0.25;
     public String stardistOutput = "Label Image"; 
     
     // Cellpose
     public int cellPoseDiameter = 100;
     public String cellPoseModel = "cyto2";
-    public String cellPoseEnvDirPath = "/opt/miniconda3/envs/cellpose";
+    public String cellPoseEnvDirPath = (IJ.isWindows()) ? System.getProperty("user.home")+"\\miniconda3\\envs\\CellPose" : "/opt/miniconda3/envs/cellpose";
       
  
     /**
@@ -242,8 +230,6 @@ public class Jnucleus_Tools3D {
         gd.addNumericField("Nucleus inner ring (µm):", innerNucDil);
         
         gd.addMessage("Cells detection", Font.getFont("Monospace"), Color.blue);
-        if (IJ.isWindows())
-            cellPoseEnvDirPath = System.getProperty("user.home")+"\\miniconda3\\envs\\CellPose";
         gd.addDirectoryField("Cellpose environment directory: ", cellPoseEnvDirPath);
         gd.addNumericField("Min cell volume (µm3): ", minCellVol);
         gd.addNumericField("Max cell volume (µm3): ", maxCellVol);
@@ -410,7 +396,6 @@ public class Jnucleus_Tools3D {
             imgDup = new Duplicator().run(img);
             resize = false;
         }
-       
         // StarDist
         File starDistModelFile = new File(modelsPath+File.separator+modelName);
         StarDist2D star = new StarDist2D(syncObject, starDistModelFile);
