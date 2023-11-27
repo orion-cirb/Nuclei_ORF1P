@@ -1,4 +1,4 @@
-# Julia_Nucleus_Analysis
+# Nuclei_ORF1P
 
 * **Developed for:** Rania
 * **Team:** Fuchs
