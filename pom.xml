@@ -6,10 +6,10 @@
 	<modelVersion>4.0.0</modelVersion>
         
 	<groupId>cirb</groupId>
-	<artifactId>Julia_Nucleus_Analysis</artifactId>
+	<artifactId>Nuclei_ORF1P</artifactId>
 	<version>1.00</version>
         <packaging>jar</packaging>
-	<name>plugins/Julia_Nucleus_Analysis</name>
+	<name>plugins/Nuclei_ORF1P</name>
 	<description>
             Intensity in nucleus and cytoplasm of ORF1P cells
         </description>
@@ -26,19 +26,23 @@
 			</roles>
 			<timezone>-1</timezone>
 		</developer>
+                		<developer>
+                    <id>hm</id>
+                    <name>Héloïse Monnet</name>
+                    <email>heloise.monnet@college-de-france.fr</email>
+                    <url></url>
+                    <organization>CIRB, Collège de France</organization>
+                    <roles>
+                            <role>developer</role>
+                    </roles>
+                    <timezone>-1</timezone>
+		</developer>
 	</developers>
-
-        <scm>
-            <connection>scm:git:git://github.com/imagej/Julia_Nucleus_Analysis.jar</connection>
-            <developerConnection>scm:git:git@github.com:imagej/Julia_Nucleus_Analysis.jar</developerConnection>
-            <tag>HEAD</tag>
-            <url>https://github.com/orion-cirb/Julia_Nucleus_Analysis.jar</url>
-	</scm>
         
 	<properties>
                 <imagej.app.directory>/opt/Fiji.app/</imagej.app.directory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<main-class>Julia_Nucleus_Analysis.jar</main-class>
+		<main-class>Nuclei_ORF1P.jar</main-class>
 	</properties>
 
 	<dependencies>

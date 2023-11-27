@@ -1,6 +1,5 @@
-package Cellpose;
+package Nuclei_ORF1P_Tools.Cellpose;
 
-import Cellpose.CellposeTaskSettings;
 import java.util.ArrayList;
 
 public class CellposeTask {

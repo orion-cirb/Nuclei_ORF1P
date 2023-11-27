@@ -1,4 +1,4 @@
-package Cellpose;
+package Nuclei_ORF1P_Tools.Cellpose;
 
 import ij.IJ;
 import ij.ImagePlus;

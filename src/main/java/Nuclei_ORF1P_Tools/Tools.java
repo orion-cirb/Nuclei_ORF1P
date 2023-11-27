@@ -1,8 +1,8 @@
-package Tools;
+package Nuclei_ORF1P_Tools;
 
-import Cellpose.CellposeSegmentImgPlusAdvanced;
-import Cellpose.CellposeTaskSettings;
-import StardistOrion.StarDist2D;
+import Nuclei_ORF1P_Tools.Cellpose.CellposeSegmentImgPlusAdvanced;
+import Nuclei_ORF1P_Tools.Cellpose.CellposeTaskSettings;
+import Nuclei_ORF1P_Tools.StardistOrion.StarDist2D;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImagePlus;
@@ -45,7 +45,7 @@ import org.scijava.util.ArrayUtils;
 /**
  * @author phm
  */
-public class Jnucleus_Tools3D {
+public class Tools {
     public final ImageIcon icon = new ImageIcon(this.getClass().getResource("/Orion_icon.png"));
     
     public String[] channelsName = {"DAPI", "ORF1P"};  

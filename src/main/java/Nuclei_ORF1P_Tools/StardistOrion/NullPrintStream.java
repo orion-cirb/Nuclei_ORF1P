@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package StardistOrion;
+package Nuclei_ORF1P_Tools.StardistOrion;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

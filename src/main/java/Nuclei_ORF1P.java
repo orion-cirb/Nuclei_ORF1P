@@ -1,7 +1,5 @@
-package Julia_Nucleus_Analysis;
-
-import Tools.Jnucleus_Tools3D;
-import Tools.Cell;
+import Nuclei_ORF1P_Tools.Tools;
+import Nuclei_ORF1P_Tools.Cell;
 import ij.IJ;
 import ij.ImagePlus;
 import java.io.BufferedWriter;
@@ -37,9 +35,9 @@ import org.scijava.util.ArrayUtils;
 /**
  * @author phm
  */
-public class Nucleus_ORF1P implements PlugIn {
+public class Nuclei_ORF1P implements PlugIn {
     
-    Jnucleus_Tools3D tools = new Jnucleus_Tools3D();
+    Tools tools = new Tools();
     private final boolean canceled = false;
     private String imageDir = "";
     public  String outDirResults = "";
@@ -195,7 +193,7 @@ public class Nucleus_ORF1P implements PlugIn {
             
             results.close();
         } catch (IOException | DependencyException | ServiceException | FormatException  ex) {
-            Logger.getLogger(Nucleus_ORF1P.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Nuclei_ORF1P.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         tools.print("--- All done! ---");
