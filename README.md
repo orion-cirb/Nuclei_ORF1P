@@ -1,7 +1,7 @@
 # Julia_Nucleus_Analysis
 
 * **Developed for:** Rania
-* **Team:** Prochiantz
+* **Team:** Fuchs
 * **Date:** October 2022
 * **Software:** Fiji
 
